@@ -17,3 +17,6 @@ PrinterList.o: PrinterList.h
 
 #compiles the PrintJob
 PrintJobWaitingQueue.o: PrintJobWaitingQueue.h
+
+clean:
+	rm Simulation Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue.o
