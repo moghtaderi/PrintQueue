@@ -3,7 +3,7 @@ Simulation: Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue
 	g++ -Wall -g -o Simulation Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue.o
 
 #compiles the simulation
-Simulation.o: simulation.cpp PrintJob.h Printer.h PrinterList.h PrintJobWaitingQueue.h
+Simulation.o: Simulation.cpp PrintJob.h Printer.h PrinterList.h PrintJobWaitingQueue.h
 	g++ -Wall -g -c Simulation.cpp
 
 #compiles the PrintJob
