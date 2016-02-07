@@ -6,6 +6,16 @@
 
 using namespace std;
 
+int randomFromRangeWithSeed(int min, int max){
+	int n = max - min + 1;
+   int remainder = RAND_MAX % n;
+   int x;
+   do{
+   	x = rand();
+   }while (x >= RAND_MAX - remainder);
+   return min + x % n;
+}
+
 int main(int argc, char const *argv[]) {
 
 	int printerCount;
@@ -75,8 +85,23 @@ int main(int argc, char const *argv[]) {
 	// Main time loop!
 	for (int tick = 1; tick <= simulationTime; tick++) {
 
+		// all printers progress for 1 minutes
+
+		// new print job is scheduled in the queue
+   	int remainder = RAND_MAX % maxPages;
+   	int x;
+   	do{
+   		x = rand();
+   	}while (x >= RAND_MAX - remainder);
+   	int pageCount = 1 + x % maxPages;
+		cout << pageCount << endl;
+
 		
+		// if there are free printers, assign the highest priority job to it!
+
 	}
+
+	// process the last tick for all the printers
 
 	cout << printerCount << "-" << printerSpeed << "-" << numPrintJobs << "-" << maxPages << "-" << seedValue << endl;
 

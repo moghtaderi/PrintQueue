@@ -4,10 +4,10 @@
 //***********************************************************************************
 class printJob {
 public:
-	printJob();
+	printJob(int pgcnt);
 
 private:
-	
+	int pageCount;
 };
 
 
@@ -17,7 +17,7 @@ public:
 	printer();
 	void setPrinterBusy(void);
 	void setPrinterFree(void);
-	
+
 private:
 	printJob currentPrintJob;
 	bool printerBusy;

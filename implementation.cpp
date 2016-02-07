@@ -3,8 +3,8 @@
 
 using namespace std;
 
-printJob::printJob() {
-
+printJob::printJob(int pgcnt) {
+	this->pageCount = pgcnt;
 }
 
 printer::printer() {
