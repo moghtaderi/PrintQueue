@@ -12,6 +12,7 @@ int main(int argc, char const *argv[]) {
 	int printerSpeed;
 	int numPrintJobs;
 	int maxPages;
+	int simulationTime;
 	char userSeed;
 	int seedValue;
 	char userOutput;
@@ -24,12 +25,18 @@ int main(int argc, char const *argv[]) {
 
 	cout << "Total number of available printers ----- ";
 	cin >> printerCount;
+	if (printerCount < 1 || printerCount > 3){
+		cout << "   ERROR: Invalid input! Parameter defaulted to 1" << endl;
+		printerCount = 1;
+	}
 	cout << "Printing speed in pages per minute ----- ";
 	cin >> printerSpeed;
 	cout << "Total number of simulated print jobs --- ";
 	cin >> numPrintJobs;
 	cout << "Maximum page count per print job ------- ";
 	cin >> maxPages;
+	cout << "Total simulation time in minutes ------- ";
+	cin >> simulationTime;
 
 	cout << "Would you like to provide the seed value [Y/N]: ";
 	cin >> userSeed;
@@ -40,12 +47,14 @@ int main(int argc, char const *argv[]) {
 	}else{
 		seedValue = time(NULL);
 	}
-	srand(seedValue);
+	
+	srand(seedValue);      // seed based on user input or time if no input provided
 
-	cout << "Would you like the output on the screen [Y/N]: ";
+	cout << "Would you like the output on the screen  [Y/N]: ";
 	cin >> userOutput;
 	if (userOutput == 'y' || userOutput == 'Y') {
 		fileIO = false;
+		// NOTE: no change to std:cout and no output file created
 	}else{
 		cout << "Please enter the name of your output file: ";
 		cin >> fileName;                    // get output file name
@@ -59,10 +68,19 @@ int main(int argc, char const *argv[]) {
    	fileIO = true;
    	coutBuffer = cout.rdbuf();          // keep a backup of cout buffer
    	cout.rdbuf(outfile.rdbuf());        // redirect cout to output file
-   	// NOTE: the rest of the file can use cout but it will be redirected to outfile
+   	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
+	}
+
+
+	// Main time loop!
+	for (int tick = 1; tick <= simulationTime; tick++) {
+
+		
 	}
 
 	cout << printerCount << "-" << printerSpeed << "-" << numPrintJobs << "-" << maxPages << "-" << seedValue << endl;
+
+	printJobWaitingQueue queue = printJobWaitingQueue();
 
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
 	outfile.close();                        // close the output file buffer

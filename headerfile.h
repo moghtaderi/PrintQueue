@@ -1,8 +1,7 @@
 #include <iostream>
+#include <queue>
 
-using namespace std;
-
-
+//***********************************************************************************
 class printJob {
 public:
 	printJob();
@@ -11,23 +10,36 @@ private:
 	
 };
 
+
+//***********************************************************************************
 class printer {
 public:
 	printer();
-private:
+	void setPrinterBusy(void);
+	void setPrinterFree(void);
 	
+private:
+	printJob currentPrintJob;
+	bool printerBusy;
 };
 
+
+//***********************************************************************************
 class printerList {
 public:
 	printerList();
+
 private:
-	
+	int numberOfPrinters;
+	printer* printers;
 };
 
-class printJobWaitingQueue {
+
+//***********************************************************************************
+class printJobWaitingQueue : public std::queue<printJob> {
 public:
-	printJobWaitingQueue();
+	printJobWaitingQueue(int size = 100);
+	// will use the queue destructor
 private:
 	
 };
