@@ -1,22 +1,13 @@
 #compiles the .o files and checks for possible warnings.
-Simulation: Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue.o
-	g++ -Wall -g -o Simulation Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue.o
+Simulation: main.o implementation.o 
+	g++ -Wall -g -o Simulation main.o implementation.o
 
 #compiles the simulation
-Simulation.o: Simulation.cpp PrintJob.h Printer.h PrinterList.h PrintJobWaitingQueue.h
-	g++ -Wall -g -c Simulation.cpp
+main.o: main.cpp implementation.cpp headerfile.h
+	g++ -Wall -g -c main.cpp
 
 #compiles the PrintJob
-PrintJob.o: PrintJob.h
-
-#compiles the Printer
-Printer.o: Printer.h
-
-#compiles the PrinterList
-PrinterList.o: PrinterList.h
-
-#compiles the PrintJob
-PrintJobWaitingQueue.o: PrintJobWaitingQueue.h
+implementation.o: headerfile.h
 
 clean:
-	rm Simulation Simulation.o PrintJob.o Printer.o PrinterList.o PrintJobWaitingQueue.o
+	rm Simulation main.o implementation.o
