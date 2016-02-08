@@ -81,31 +81,43 @@ int main(int argc, char const *argv[]) {
    	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
 	}
 
+	printScheduler scheduler = printScheduler();
+	printerList printers = printerList(printerCount);
 
 	// Main time loop!
-	for (int tick = 1; tick <= simulationTime; tick++) {
+	int tick, temp, pageCount, jobID = 1;
+	int remainder = RAND_MAX % maxPages;
+	for (tick = 1; tick <= simulationTime; tick++) {
 
 		// all printers progress for 1 minutes
+		printers.progressOneMinute();
 
 		// new print job is scheduled in the queue
-   	int remainder = RAND_MAX % maxPages;
-   	int x;
    	do{
-   		x = rand();
-   	}while (x >= RAND_MAX - remainder);
-   	int pageCount = 1 + x % maxPages;
-		cout << pageCount << endl;
+   		temp = rand();
+   	}while(temp >= RAND_MAX - remainder);
 
-		
+   	pageCount = 1 + temp % maxPages;
+		printJob newJob = printJob(pageCount, jobID++);
+
+		cout << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
+
+		scheduler.scheduleNewPrintJob(newJob);
+
 		// if there are free printers, assign the highest priority job to it!
+		int freePrinterCount = printers.getFreePrinterCount();
 
+		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS!" << endl;
+
+		scheduler.processJobs(freePrinterCount, printers, cout);
 	}
 
 	// process the last tick for all the printers
+	printers.progressOneMinute();
+
+	// Collect data
 
 	cout << printerCount << "-" << printerSpeed << "-" << numPrintJobs << "-" << maxPages << "-" << seedValue << endl;
-
-	printJobWaitingQueue queue = printJobWaitingQueue();
 
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
 	outfile.close();                        // close the output file buffer
