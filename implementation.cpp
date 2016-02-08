@@ -7,58 +7,69 @@ printJob::printJob(){
 }
 
 printJob::printJob(int pgcnt, int pjid) {
-	this->pageCount = pgcnt;
-	this->jobID = pjid;
+	pageCount = pgcnt;
+	jobID = pjid;
 }
 
 int printJob::getPageCount(void) {
-	return this->pageCount;
+	return pageCount;
 }
 
 int printJob::printAtSpeed(int printerSpeed){
-	this->pageCount -= printerSpeed;
-	if (this->pageCount < 0) {
-		this-> pageCount = 0;
+	pageCount -= printerSpeed;
+	if (pageCount < 0) {
+		 pageCount = 0;
 	}
-	return this->pageCount;
+	return pageCount;
 }
 
 int printJob::getJobID(void){
-	return this->jobID;
+	return jobID;
 }
 
 //*********************************************************************
 printer::printer() {
-
+	static int pid;
+	printerID = ++pid;
 }
 
 void printer::setJob(printJob newJob) {
-	this->currentPrintJob = newJob;
-	this->setPrinterBusy();
+	currentPrintJob = newJob;
+	setPrinterBusy();
+	std::cout << "printer number " << printerID << " set to BUSY!!*************************************" << std::endl;
+}
+
+void printer::setPrintSpeed(int ps){
+	printSpeed = ps;
 }
 
 void printer::progressOneMinute(void) {
 	int remainingPages;
 
 	if (printerBusy) {
-		remainingPages = currentPrintJob.printAtSpeed(this->printSpeed);
-		if (!remainingPages) {
-			this->setPrinterFree();
+		remainingPages = currentPrintJob.printAtSpeed(printSpeed);
+		std::cout << "***** PRINTER " << printerID << " HAS " << remainingPages << " REMAINING PAGES!!" << std::endl;
+		if (remainingPages == 0) {
+			setPrinterFree();
 		}
 	}
 }
 
 bool printer::isFree(void){
-	return !(this->printerBusy);
+	return !printerBusy;
+}
+
+int printer::getPrinterID(void){
+	return printerID;
 }
 
 //PRIVATE MEMBER FUNCTIONS=============
 void printer::setPrinterBusy(void) {
-	this->printerBusy = true;
+	printerBusy = true;
 }
 
 void printer::setPrinterFree(void) {
-	this->printerBusy = false;
+	printerBusy = false;
 }
 //=====================================
 
@@ -66,6 +77,12 @@ void printer::setPrinterFree(void) {
 printerList::printerList(int printerCount) {
 	numberOfPrinters = printerCount;
 	printers = new printer[numberOfPrinters];
+}
+
+void printerList::setPrintingSpeed(int printSpeed){
+	for (int i = 0; i < numberOfPrinters; i++) {
+		printers[i].setPrintSpeed(printSpeed);
+	}
 }
 
 void printerList::progressOneMinute(void) {
@@ -86,10 +103,22 @@ int printerList::getFreePrinterCount(void) {
 }
 
 void printerList::assignNewJob(printJob npj){
+	bool assignmentCompleted = false;
+	for (int i = 0; i < numberOfPrinters && !assignmentCompleted; i++) {
+		if (printers[i].isFree()){
+			printers[i].setJob(npj);
+			std::cout << "JOB " << npj.getJobID() << " GOT ASSIGNED TO PRINTER " << printers[i].getPrinterID() << std::endl;
+			assignmentCompleted = true;
+		}
+	}
+}
+
+void printerList::listFreePrinters(std::ostream& outStream){
 	for (int i = 0; i < numberOfPrinters; i++) {
 		if (printers[i].isFree())
-			printers[i].setJob(npj);
+			outStream << printers[i].getPrinterID() << " ";
 	}
+	outStream << "\n";
 }
 
 
@@ -99,50 +128,75 @@ printJobWaitingQueue::printJobWaitingQueue(int size) {
 }
 
 bool printJobWaitingQueue::isEmpty(void) {
-	return this->empty();
+	return empty();
 }
+
+
+
+// printJobWaitingQueue::printJobWaitingQueue(printJobWaitingQueue* otherQueue){
+// 	while(!otherQueue->isEmpty()){
+// 		std::cout << otherQueue->front().getPageCount() << " ";
+// 		otherQueue->pop();
+// 	}
+// }
+
+// void printJobWaitingQueue::listQueueContent(std::ostream& outStream){
+// 	printJobWaitingQueue temp = printJobWaitingQueue(this);
+// 	while(!temp.empty()){
+// 		outStream << temp.front().getJobID() << " ";
+// 		temp.pop();
+// 	}
+// }
 
 //*********************************************************************
 printScheduler::printScheduler(){
 
 }
 
-void printScheduler::scheduleNewPrintJob(printJob npj) {
+void printScheduler::scheduleNewPrintJob(printJob npj, std::ostream& outStream) {
 	int pageCount = npj.getPageCount();
 	
 	if(pageCount < 10){
 		highPriority.push(npj);
+		outStream << "    JOB " << npj.getJobID() << " GOT ASSIGNED TO HIGH PRIOROTY QUEUE!\n";
 	}else if(pageCount < 20){
 		mediumPriority.push(npj);
+		outStream << "    JOB " << npj.getJobID() << " GOT ASSIGNED TO MEDIUM PRIOROTY QUEUE!\n";
 	}else{
 		lowPriority.push(npj);
+		outStream << "    JOB " << npj.getJobID() << " GOT ASSIGNED TO LOW PRIOROTY QUEUE!\n";
 	}
 }
 
-void printScheduler::processJobs(int jobCount, printerList& plist, std::ostream& outStream) {
+void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream) {
 	printJob newJob;
 
 	// Get the job based on priority
-	while (jobCount != 0){
+	while (attempts != 0){
 		if(!highPriority.isEmpty()){
 			newJob = highPriority.front();
 			highPriority.pop();
 			outStream << "    JOB " << newJob.getJobID() << " TAKEN FROM HIGH PRIOROTY QUEUE!\n";
+			plist.assignNewJob(newJob);
+
 		}else if(!mediumPriority.isEmpty()){
 			newJob = mediumPriority.front();
 			mediumPriority.pop();
 			outStream << "    JOB " << newJob.getJobID() << " TAKEN FROM MEDIUM PRIOROTY QUEUE!\n";
+			plist.assignNewJob(newJob);
+
 		}else if(!lowPriority.isEmpty()){
 			newJob = lowPriority.front();
 			lowPriority.pop();
 			outStream << "    JOB " << newJob.getJobID() << " TAKEN FROM LOW PRIOROTY QUEUE!\n";
+			plist.assignNewJob(newJob);
+
 		}else{
 			// no more jobs left but free printers available
-			outStream << "    NO MORE JOBS IN THE QUEUE FOR THE FREE PRINTER(S)!\n";
+			outStream << "    NO MORE JOBS IN THE QUEUE FOR PRINTERS: ";
+			plist.listFreePrinters(outStream);
 		}
 
-		jobCount--;
+		attempts--;
 	}
-
-	plist.assignNewJob(newJob);
 }

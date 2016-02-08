@@ -10,7 +10,7 @@ public:
 	int getPageCount(void);
 	int printAtSpeed(int printerSpeed);
 	int getJobID(void);
-	
+
 private:
 	int pageCount;
 	int jobID;
@@ -18,14 +18,17 @@ private:
 
 
 //***********************************************************************************
-class printer {
-public:
+class printer {	
+public:	
 	printer();
 	void progressOneMinute(void);
 	bool isFree(void);
 	void setJob(printJob newJob);
+	void setPrintSpeed(int ps);
+	int getPrinterID(void);
 
 private:
+	int printerID;
 	int printSpeed;
 	printJob currentPrintJob;
 	bool printerBusy;
@@ -42,6 +45,8 @@ public:
 	void progressOneMinute(void);
 	int getFreePrinterCount(void);
 	void assignNewJob(printJob npj);
+	void setPrintingSpeed(int printSpeed);
+	void listFreePrinters(std::ostream& outStream);
 
 private:
 	int numberOfPrinters;
@@ -53,8 +58,11 @@ private:
 class printJobWaitingQueue : public std::queue<printJob> {
 public:
 	printJobWaitingQueue(int size = 100);
-	// will use the queue destructor
+	// printJobWaitingQueue(printJobWaitingQueue* otherQueue); // copy constructor
+
 	bool isEmpty();
+	// void listQueueContent(std::ostream& outStream);
+	
 private:
 	
 };
@@ -63,8 +71,8 @@ private:
 class printScheduler {
 public:
 	printScheduler();
-	void scheduleNewPrintJob(printJob npj);
-	void processJobs(int jobCount, printerList& plist, std::ostream& outStream);
+	void scheduleNewPrintJob(printJob npj, std::ostream& outStream);
+	void processJobs(int attempts, printerList& plist, std::ostream& outStream);
 
 private:
 	printJobWaitingQueue highPriority;

@@ -100,14 +100,15 @@ int main(int argc, char const *argv[]) {
    	pageCount = 1 + temp % maxPages;
 		printJob newJob = printJob(pageCount, jobID++);
 
-		cout << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
+		cout << endl << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
 
-		scheduler.scheduleNewPrintJob(newJob);
+		scheduler.scheduleNewPrintJob(newJob, cout);
 
 		// if there are free printers, assign the highest priority job to it!
 		int freePrinterCount = printers.getFreePrinterCount();
 
-		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS!" << endl;
+		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS ****  "; 
+		printers.listFreePrinters(cout);
 
 		scheduler.processJobs(freePrinterCount, printers, cout);
 	}
