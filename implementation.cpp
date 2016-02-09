@@ -17,7 +17,7 @@ int printJob::getPageCount(void) {
 
 int printJob::printAtSpeed(int printerSpeed){
 
-	std::cout << "printeAtSpeed: " << printerSpeed << std::endl;
+//	std::cout << "printeAtSpeed: " << printerSpeed << std::endl;
 
 	pageCount -= printerSpeed;
 	if (pageCount < 0) {
@@ -39,7 +39,7 @@ printer::printer() {
 void printer::setJob(printJob &newJob) {
 	currentPrintJob = &newJob;
 	setPrinterBusy();
-	std::cout << "printer number " << printerID << " set to BUSY!!*************************************" << std::endl;
+//	std::cout << "printer number " << printerID << " set to BUSY!!*************************************" << std::endl;
 }
 
 void printer::setPrintSpeed(int ps){
@@ -49,11 +49,11 @@ void printer::setPrintSpeed(int ps){
 void printer::progressOneMinute(void) {
 	int remainingPages;
 
-	std::cout << "printer " << printerID << " progressed for one minute!" << std::endl;
+//	std::cout << "printer " << printerID << " progressed for one minute!" << std::endl;
 
 	if (printerBusy) {
 		remainingPages = currentPrintJob->printAtSpeed(printSpeed);
-		std::cout << "***** PRINTER " << printerID << " HAS " << remainingPages << " REMAINING PAGES!!" << std::endl;
+//		std::cout << "***** PRINTER " << printerID << " HAS " << remainingPages << " REMAINING PAGES!!" << std::endl;
 		if (remainingPages == 0) {
 			//this->currentPrintJob.destructor
 			setPrinterFree();
@@ -113,7 +113,7 @@ void printerList::assignNewJob(printJob &npj){
 	for (int i = 0; i < numberOfPrinters && !assignmentCompleted; i++) {
 		if (printers[i].isFree()){
 			printers[i].setJob(npj);
-			std::cout << "JOB " << npj.getJobID() << " GOT ASSIGNED TO PRINTER " << printers[i].getPrinterID() << std::endl;
+//			std::cout << "JOB " << npj.getJobID() << " GOT ASSIGNED TO PRINTER " << printers[i].getPrinterID() << std::endl;
 			assignmentCompleted = true;
 		}
 	}

@@ -17,6 +17,7 @@ int randomFromRangeWithSeed(int min, int max){
 }
 
 void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime);
+void getSeedRef(char &userSeed, int &seedValue);
 
 int main(int argc, char const *argv[]) {
 
@@ -33,17 +34,10 @@ int main(int argc, char const *argv[]) {
 	ofstream outfile;
 	streambuf* coutBuffer;
 
-	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);	
+	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);
+	getSeedRef(userSeed, seedValue);	
 
-	cout << "Would you like to provide the seed value [Y/N]: ";
-	cin >> userSeed;
-
-	if (userSeed == 'y' || userSeed == 'Y') {
-		cout << "Please enter your desired seed value: ";
-		cin >> seedValue;
-	}else{
-		seedValue = time(NULL);
-	}
+	
 	
 	srand(seedValue);      // seed based on user input or time if no input provided
 
@@ -76,8 +70,6 @@ int main(int argc, char const *argv[]) {
 	int tick, temp, pageCount, jobID = 1;
 	int remainder = RAND_MAX % maxPages;
 
-	cout << "START OF THE SIMULATION!" << endl;
-
 	for (tick = 1; tick <= simulationTime; tick++) {
 
 		// all printers progress for 1 minutes
@@ -92,15 +84,15 @@ int main(int argc, char const *argv[]) {
 
 		printJob *newJob = new printJob(pageCount, jobID++);
 
-		cout << endl << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
+//		cout << endl << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
 
 		scheduler.scheduleNewPrintJob(newJob, cout);
 
 		// if there are free printers, assign the highest priority job to it!
 		int freePrinterCount = printers.getFreePrinterCount();
 
-		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS ****  "; 
-		printers.listFreePrinters(cout);
+//		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS ****  "; 
+//		printers.listFreePrinters(cout);
 
 		scheduler.processJobs(freePrinterCount, printers, cout);
 
@@ -146,4 +138,18 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 
 }
 
+void getSeedRef(char &userSeed, int &seedValue){
+	cout << "Would you like to provide the seed value [Y/N]: ";
+	cin >> userSeed;
+
+	if (userSeed == 'y' || userSeed == 'Y') {
+		cout << "Please enter your desired seed value: ";
+		cin >> seedValue;
+	}else{
+		seedValue = time(NULL);
+	}
+
+
+
+}
 
