@@ -2,6 +2,7 @@
 #include <iostream>
 
 //*********************************************************************
+//printJob class functions
 printJob::printJob(){
 
 }
@@ -31,6 +32,7 @@ int printJob::getJobID(void){
 }
 
 //*********************************************************************
+//printer class functions
 printer::printer() {
 	static int pid;
 	printerID = ++pid;
@@ -80,6 +82,7 @@ void printer::setPrinterFree(void) {
 //=====================================
 
 //*********************************************************************
+//printerList class functions
 printerList::printerList(int printerCount) {
 	numberOfPrinters = printerCount;
 	printers = new printer[numberOfPrinters];
@@ -129,6 +132,7 @@ void printerList::listFreePrinters(std::ostream& outStream){
 
 
 //*********************************************************************
+//printJobWaitingQueue class functions
 printJobWaitingQueue::printJobWaitingQueue(int size) {
 
 }
@@ -155,6 +159,7 @@ bool printJobWaitingQueue::isEmpty(void) {
 // }
 
 //*********************************************************************
+//printScheduler class functions
 printScheduler::printScheduler(){
 
 }

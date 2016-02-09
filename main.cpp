@@ -23,6 +23,7 @@ void seperateOutput(char userOutput,string fileName,ofstream &outfile, streambuf
 
 int main(int argc, char const *argv[]) {
 
+	//variable declarations
 	int printerCount;
 	int printerSpeed;
 	int numPrintJobs;
@@ -93,6 +94,7 @@ int main(int argc, char const *argv[]) {
 	return 0;
 }
 /* 
+	UserInput
 	Pre-Condition: the variables must be declared in the callers scope.
 
 	post-Condition: all of the variables will be set based on the user input.
@@ -120,6 +122,7 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 }
 
 /*
+	getSeedRef
 	Pre-Condition: the seed variable is declared in the callers scope.
 
 	post-Condition: sets the seed variable based on the user input.
@@ -136,8 +139,13 @@ void getSeedRef(char &userSeed, int &seedValue){
 	}
 }
 
+/*
+	separateOutput
+	Pre-Condition: the variables are decrared in the callers scope
 
-void seperateOutput(char userOutput,string fileName,ofstream &outfile, streambuf*& coutBuffer){
+	Post-Condition: outputs the information to either the screen or a file specified by the user
+*/
+void seperateOutput(char userOutput, string fileName, ofstream &outfile, streambuf*& coutBuffer){
 	
 	bool fileIO;
 
