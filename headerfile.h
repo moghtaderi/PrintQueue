@@ -37,8 +37,8 @@ private:
 /*
 printer class:
 */
-class printer {	
-public:	
+class printer {
+public:
 	//printer constructor
 	printer();
 	//progressOneMinute
@@ -110,7 +110,7 @@ public:
 	//npj: new print job
 	//Pre-condition: new print job to be assigned
 	//Post-condition: assigns a free printer a new print job
-	void assignNewJob(printJob &npj);
+	void assignNewJob(printJob &npj, std::ostream& outStream);
 	//setPrintingSpeed
 	//Function to set the printer speed for all printers
 	//Pre-condition: printer speed given by the user
@@ -144,9 +144,9 @@ public:
 	//Post-condition: returns if the queue is empty
 	bool isEmpty();
 	// void listQueueContent(std::ostream& outStream);
-	
+
 private:
-	
+
 };
 
 //***********************************************************************************

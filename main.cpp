@@ -37,8 +37,8 @@ int main(int argc, char const *argv[]) {
 	streambuf* coutBuffer;
 
 	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);
-	getSeedRef(userSeed, seedValue);	
-	
+	getSeedRef(userSeed, seedValue);
+
 	srand(seedValue);      // seed based on user input or time if no input provided
 
 	seperateOutput(userOutput, fileName, outfile, coutBuffer);
@@ -66,15 +66,21 @@ int main(int argc, char const *argv[]) {
 
 		printJob *newJob = new printJob(pageCount, jobID++);
 
-//		cout << endl << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
+		cout << endl << "Tick " << tick << ":" << endl;
 
 		scheduler.scheduleNewPrintJob(newJob, cout);
 
 		// if there are free printers, assign the highest priority job to it!
 		int freePrinterCount = printers.getFreePrinterCount();
 
-//		cout << "      THERE ARE " << freePrinterCount << " FREE PRINTERS ****  "; 
-//		printers.listFreePrinters(cout);
+		if (freePrinterCount > 0) {
+			cout << "There are " << freePrinterCount << " available printers: ";
+			printers.listFreePrinters(cout);
+			cout << endl;
+		}else{
+			cout << "All printers are currently busy!" << endl;
+		}
+
 
 		scheduler.processJobs(freePrinterCount, printers, cout);
 
@@ -93,7 +99,7 @@ int main(int argc, char const *argv[]) {
 
 	return 0;
 }
-/* 
+/*
 	UserInput
 	Pre-Condition: the variables must be declared in the callers scope.
 
@@ -146,7 +152,7 @@ void getSeedRef(char &userSeed, int &seedValue){
 	Post-Condition: outputs the information to either the screen or a file specified by the user
 */
 void seperateOutput(char userOutput, string fileName, ofstream &outfile, streambuf*& coutBuffer){
-	
+
 	bool fileIO;
 
 	cout << "Would you like the output on the screen  [Y/N]: ";
@@ -159,7 +165,7 @@ void seperateOutput(char userOutput, string fileName, ofstream &outfile, streamb
 		cin >> fileName;                    // get output file name
 
     	outfile.open(fileName.c_str());     // open file for write
-   	
+
 	   	if(outfile.fail()) {
 	      	cerr << "ERROR: could not create file <" << fileName << ">" << endl;
 	      	exit(1);
@@ -171,7 +177,3 @@ void seperateOutput(char userOutput, string fileName, ofstream &outfile, streamb
 	   	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
 	}
 }
-
-
-
-
