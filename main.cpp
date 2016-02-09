@@ -16,6 +16,8 @@ int randomFromRangeWithSeed(int min, int max){
    return min + x % n;
 }
 
+void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime);
+
 int main(int argc, char const *argv[]) {
 
 	int printerCount;
@@ -31,22 +33,7 @@ int main(int argc, char const *argv[]) {
 	ofstream outfile;
 	streambuf* coutBuffer;
 
-	cout << endl << "+++ Welcome to the printer simulation! +++" << endl << endl;
-
-	cout << "Total number of available printers ----- ";
-	cin >> printerCount;
-	if (printerCount < 1 || printerCount > 3){
-		cout << "   ERROR: Invalid input! Parameter defaulted to 1" << endl;
-		printerCount = 1;
-	}
-	cout << "Printing speed in pages per minute ----- ";
-	cin >> printerSpeed;
-	cout << "Total number of simulated print jobs --- ";
-	cin >> numPrintJobs;
-	cout << "Maximum page count per print job ------- ";
-	cin >> maxPages;
-	cout << "Total simulation time in minutes ------- ";
-	cin >> simulationTime;
+	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);	
 
 	cout << "Would you like to provide the seed value [Y/N]: ";
 	cin >> userSeed;
@@ -94,7 +81,7 @@ int main(int argc, char const *argv[]) {
 	for (tick = 1; tick <= simulationTime; tick++) {
 
 		// all printers progress for 1 minutes
-		printers.progressOneMinute();
+		//printers.progressOneMinute();
 
 		// new print job is scheduled in the queue
 	   	do{
@@ -116,10 +103,12 @@ int main(int argc, char const *argv[]) {
 		printers.listFreePrinters(cout);
 
 		scheduler.processJobs(freePrinterCount, printers, cout);
+
+		// process the last tick for all the printers
+		printers.progressOneMinute();
+
 	}
 
-	// process the last tick for all the printers
-	printers.progressOneMinute();
 
 	// Collect data
 
@@ -130,3 +119,31 @@ int main(int argc, char const *argv[]) {
 
 	return 0;
 }
+/* 
+	Pre-Condition: the variables must be declared in the callers scope.
+
+	post-Condition: all of the variables will be set based on the user input.
+*/
+void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime){
+
+	cout << endl << "+++ Welcome to the printer simulation! +++" << endl << endl;
+
+	cout << "Total number of available printers ----- ";
+	cin >> printerCount;
+	if (printerCount < 1 || printerCount > 3){
+		cout << "   ERROR: Invalid input! Parameter defaulted to 1" << endl;
+		printerCount = 1;
+	}
+	cout << "Printing speed in pages per minute ----- ";
+	cin >> printerSpeed;
+	cout << "Total number of simulated print jobs --- ";
+	cin >> numPrintJobs;
+	cout << "Maximum page count per print job ------- ";
+	cin >> maxPages;
+	cout << "Total simulation time in minutes ------- ";
+	cin >> simulationTime;
+
+
+}
+
+
