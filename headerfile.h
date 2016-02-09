@@ -21,7 +21,7 @@ public:
 	//Function that "prints" at the speed given by the user
 	//Pre-condition: the print speed given by the user
 	//Post-condition: returns the number of pages printed
-	int printAtSpeed(int printerSpeed);
+	int printAtSpeed(int printerSpeed, int& totalPagesPrinted);
 
 	//getJobID
 	//Function that gets the job ID
@@ -48,7 +48,7 @@ public:
 	//Function to tell you how many pages are left
 	//Pre-Condition: none
 	//Post-Condition: increments with the number of pages left
-	void progressOneMinute(std::ostream& outStream);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted);
 
 	//isFree
 	//Function that returns the status of the printer
@@ -115,7 +115,7 @@ public:
 	//Function to increase the progress of each printer each minute
 	//Pre-condition: none
 	//Post-condition: increments the progress of each printer in the queue
-	void progressOneMinute(std::ostream& outStream);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted);
 
 	//getFreePrinterCount
 	//Function that returns the number of free printers

@@ -16,8 +16,9 @@ int printJob::getPageCount(void) {
 	return pageCount;
 }
 
-int printJob::printAtSpeed(int printerSpeed){
+int printJob::printAtSpeed(int printerSpeed, int& totalPagesPrinted){
 
+	totalPagesPrinted += printerSpeed;
 	pageCount -= printerSpeed;
 	if (pageCount < 0) {
 		 pageCount = 0;
@@ -47,11 +48,11 @@ void printer::setPrintSpeed(int ps){
 	printSpeed = ps;
 }
 
-void printer::progressOneMinute(std::ostream& outStream) {
+void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
 	int remainingPages;
 
 	if (printerBusy) {
-		remainingPages = currentPrintJob->printAtSpeed(printSpeed);
+		remainingPages = currentPrintJob->printAtSpeed(printSpeed, totalPagesPrinted);
 		if (remainingPages != 0) {
 			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";
 		}else{
@@ -97,10 +98,10 @@ void printerList::setPrintingSpeed(int printSpeed){
 	}
 }
 
-void printerList::progressOneMinute(std::ostream& outStream) {
+void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
 	outStream << "    =========== Printer Status ===========\n";
 	for (int i = 0; i < numberOfPrinters; i++) {
-		printers[i].progressOneMinute(outStream);
+		printers[i].progressOneMinute(outStream, totalPagesPrinted);
 	}
 	outStream << "    ======================================\n";
 }

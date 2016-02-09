@@ -20,7 +20,7 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 void getSeedRef(char &userSeed, int &seedValue);
 void setupOutput(char userOutput,string fileName, ofstream &outStream, streambuf*& coutBuffer);
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue);
-void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler);
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted);
 
 int main(int argc, char const *argv[]) {
 
@@ -39,6 +39,7 @@ int main(int argc, char const *argv[]) {
 	int hwt = 0;
 	int mwt = 0;
 	int lwt = 0;
+	int totalPagesPrinted = 0;
 
 	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);
 	getSeedRef(userSeed, seedValue);
@@ -88,12 +89,12 @@ int main(int argc, char const *argv[]) {
 		scheduler.processJobs(freePrinterCount, printers, cout);
 
 		// let all the printers progress for one minute
-		printers.progressOneMinute(cout);
+		printers.progressOneMinute(cout, totalPagesPrinted);
 
 		scheduler.calculateWaitingTimes(hwt, mwt, lwt);
 	}
 
-	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler);
+	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler, totalPagesPrinted);
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
@@ -186,7 +187,7 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 	cout << "   Seed Value: " << seedValue << "\n";
 }
 
-void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler){
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted){
 	cout << "\n••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\n\n";
 	printers->completionReport(cout);
 	cout << "\n";
@@ -200,10 +201,11 @@ void outputSimulationSummary(printerList* printers, int high, int med, int low, 
 		cout << "    All printers were busy at the end of simulation!\n";
 	}
 
+	cout << "    Total pages printed: " << totalPagesPrinted << " pages\n";
 	cout << "    Total waiting time in the queue: " << high+med+low << " minutes\n";
-	cout << "        in HIGH PRIOROTY queue: " << high << "\n";
-	cout << "        in MEDIUM PRIOROTY queue: " << med << "\n";
-	cout << "        in LOW PRIOROTY queue: " << low << "\n";
+	cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
+	cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
+	cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";
 	cout << "    Jobs still waiting in the queue: " << scheduler->getLeftoverJobCount() << "\n";
 
 	cout << "\n••••••••••••••••••••••••••••••••••••••••••••••••••••••\n";
