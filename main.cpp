@@ -83,22 +83,27 @@ int main(int argc, char const *argv[]) {
 
 	printScheduler scheduler = printScheduler();
 	printerList printers = printerList(printerCount);
+	printers.setPrintingSpeed(printerSpeed);
 
 	// Main time loop!
 	int tick, temp, pageCount, jobID = 1;
 	int remainder = RAND_MAX % maxPages;
+
+	cout << "START OF THE SIMULATION!" << endl;
+
 	for (tick = 1; tick <= simulationTime; tick++) {
 
 		// all printers progress for 1 minutes
 		printers.progressOneMinute();
 
 		// new print job is scheduled in the queue
-   	do{
-   		temp = rand();
-   	}while(temp >= RAND_MAX - remainder);
+	   	do{
+	   		temp = rand();
+	   	}while(temp >= RAND_MAX - remainder);
 
-   	pageCount = 1 + temp % maxPages;
-		printJob newJob = printJob(pageCount, jobID++);
+	   	pageCount = 1 + temp % maxPages;
+
+		printJob *newJob = new printJob(pageCount, jobID++);
 
 		cout << endl << "tick " << tick << ": NEW " << pageCount << " PAGE JOB QUEUED!" << endl;
 
