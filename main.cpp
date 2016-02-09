@@ -18,6 +18,8 @@ int randomFromRangeWithSeed(int min, int max){
 
 void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime);
 void getSeedRef(char &userSeed, int &seedValue);
+void seperateOutput(char userOutput,string fileName,ofstream &outfile, streambuf*& coutBuffer);
+
 
 int main(int argc, char const *argv[]) {
 
@@ -28,39 +30,18 @@ int main(int argc, char const *argv[]) {
 	int simulationTime;
 	char userSeed;
 	int seedValue;
-	char userOutput;
+	char userOutput = 'Y';
 	string fileName;
-	bool fileIO;
 	ofstream outfile;
 	streambuf* coutBuffer;
 
 	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);
 	getSeedRef(userSeed, seedValue);	
-
-	
 	
 	srand(seedValue);      // seed based on user input or time if no input provided
 
-	cout << "Would you like the output on the screen  [Y/N]: ";
-	cin >> userOutput;
-	if (userOutput == 'y' || userOutput == 'Y') {
-		fileIO = false;
-		// NOTE: no change to std:cout and no output file created
-	}else{
-		cout << "Please enter the name of your output file: ";
-		cin >> fileName;                    // get output file name
-    	outfile.open(fileName.c_str());     // open file for write
-   	
-   	if(outfile.fail()) {
-      	cerr << "ERROR: could not create file <" << fileName << ">" << endl;
-      	exit(1);
-   	}
+	seperateOutput(userOutput, fileName, outfile, coutBuffer);
 
-   	fileIO = true;
-   	coutBuffer = cout.rdbuf();          // keep a backup of cout buffer
-   	cout.rdbuf(outfile.rdbuf());        // redirect cout to output file
-   	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
-	}
 
 	printScheduler scheduler = printScheduler();
 	printerList printers = printerList(printerCount);
@@ -138,6 +119,11 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 
 }
 
+/*
+	Pre-Condition: the seed variable is declared in the callers scope.
+
+	post-Condition: sets the seed variable based on the user input.
+*/
 void getSeedRef(char &userSeed, int &seedValue){
 	cout << "Would you like to provide the seed value [Y/N]: ";
 	cin >> userSeed;
@@ -148,8 +134,36 @@ void getSeedRef(char &userSeed, int &seedValue){
 	}else{
 		seedValue = time(NULL);
 	}
-
-
-
 }
+
+
+void seperateOutput(char userOutput,string fileName,ofstream &outfile, streambuf*& coutBuffer){
+	
+	bool fileIO;
+
+	cout << "Would you like the output on the screen  [Y/N]: ";
+	cin >> userOutput;
+	if (userOutput == 'y' || userOutput == 'Y') {
+		fileIO = false;
+		// NOTE: no change to std:cout and no output file created
+	}else{
+		cout << "Please enter the name of your output file: ";
+		cin >> fileName;                    // get output file name
+
+    	outfile.open(fileName.c_str());     // open file for write
+   	
+	   	if(outfile.fail()) {
+	      	cerr << "ERROR: could not create file <" << fileName << ">" << endl;
+	      	exit(1);
+	   	}
+
+	   	fileIO = true;
+	   	coutBuffer = cout.rdbuf();          // keep a backup of cout buffer
+	   	cout.rdbuf(outfile.rdbuf());        // redirect cout to output file
+	   	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
+	}
+}
+
+
+
 
