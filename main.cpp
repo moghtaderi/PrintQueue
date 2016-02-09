@@ -20,7 +20,7 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 void getSeedRef(char &userSeed, int &seedValue);
 void setupOutput(char userOutput,string fileName, ofstream &outStream, streambuf*& coutBuffer);
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue);
-void outputSimulationSummary(printerList* printers, int waitingTimes, printScheduler* scheduler);
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler);
 
 int main(int argc, char const *argv[]) {
 
@@ -36,7 +36,9 @@ int main(int argc, char const *argv[]) {
 	string fileName;
 	ofstream outfile;
 	streambuf* coutBuffer;
-	int waitingTimes = 0;
+	int hwt = 0;
+	int mwt = 0;
+	int lwt = 0;
 
 	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime);
 	getSeedRef(userSeed, seedValue);
@@ -88,10 +90,10 @@ int main(int argc, char const *argv[]) {
 		// let all the printers progress for one minute
 		printers.progressOneMinute(cout);
 
-		scheduler.calculateWaitingTimes(waitingTimes);
+		scheduler.calculateWaitingTimes(hwt, mwt, lwt);
 	}
 
-	outputSimulationSummary(&printers, waitingTimes, &scheduler);
+	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler);
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
@@ -184,7 +186,7 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 	cout << "   Seed Value: " << seedValue << "\n";
 }
 
-void outputSimulationSummary(printerList* printers, int waitingTimes, printScheduler* scheduler){
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler){
 	cout << "\n••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\n\n";
 	printers->completionReport(cout);
 	cout << "\n";
@@ -198,7 +200,10 @@ void outputSimulationSummary(printerList* printers, int waitingTimes, printSched
 		cout << "    All printers were busy at the end of simulation!\n";
 	}
 
-	cout << "    Total waiting time in the queue: " << waitingTimes << " minutes\n";
+	cout << "    Total waiting time in the queue: " << high+med+low << " minutes\n";
+	cout << "        in HIGH PRIOROTY queue: " << high << "\n";
+	cout << "        in MEDIUM PRIOROTY queue: " << med << "\n";
+	cout << "        in LOW PRIOROTY queue: " << low << "\n";
 	cout << "    Jobs still waiting in the queue: " << scheduler->getLeftoverJobCount() << "\n";
 
 	cout << "\n••••••••••••••••••••••••••••••••••••••••••••••••••••••\n";

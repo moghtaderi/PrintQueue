@@ -226,10 +226,10 @@ void printScheduler::processJobs(int attempts, printerList& plist, std::ostream&
 	}
 }
 
-void printScheduler::calculateWaitingTimes(int& waitingTimes) {
-	waitingTimes += highPriority.size();
-	waitingTimes += mediumPriority.size();
-	waitingTimes += lowPriority.size();
+void printScheduler::calculateWaitingTimes(int& high, int& med, int& low) {
+	high += highPriority.size();
+	med += mediumPriority.size();
+	low += lowPriority.size();
 }
 
 int printScheduler::getLeftoverJobCount(void) {

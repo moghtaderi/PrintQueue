@@ -199,7 +199,7 @@ public:
 	//Post-condition: outputs the jobs taken from different priority queues
 	void processJobs(int attempts, printerList& plist, std::ostream& outStream);
 
-	void calculateWaitingTimes(int& waitingTimes);
+	void calculateWaitingTimes(int& high, int& med, int& low);
 	int getLeftoverJobCount(void);
 
 private:
