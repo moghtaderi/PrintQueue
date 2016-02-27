@@ -148,6 +148,8 @@ public:
 	//Post-condition: returns the completed jobs for all printers
 	void completionReport(std::ostream& outStream);
 
+	int getCompletedJobsCount(void);
+
 private:
 	int numberOfPrinters;
 	printer* printers;

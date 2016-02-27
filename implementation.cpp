@@ -141,6 +141,15 @@ void printerList::completionReport(std::ostream& outStream) {
 	}
 }
 
+int printerList::getCompletedJobsCount(void){
+	int tcj = 0;
+
+	for (int i = 0; i < numberOfPrinters; i++)
+		tcj += printers[i].getCompletedJobs();
+
+	return tcj;
+}
+
 
 //*********************************************************************
 //printJobWaitingQueue class functions

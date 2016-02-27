@@ -16,21 +16,21 @@ int randomFromRangeWithSeed(int min, int max){
    return min + x % n;
 }
 
-void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime, char &userPrintSpeed, int *printerArray);
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int *printerSpeedArray);
 void getSeedRef(char &userSeed, int &seedValue);
 void setupOutput(char userOutput,string fileName, ofstream &outStream, streambuf*& coutBuffer);
-void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, int *printerArray);
-void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted);
-void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerArray);
+void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, int *printerSpeedArray);
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted, int tick);
+void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray);
 
 int main(int argc, char const *argv[]) {
 
 	//variable declarations
-	int printerCount;
-	int printerSpeed;
-	int numPrintJobs;
-	int maxPages;
-	int simulationTime;
+	int printerCount = 3;
+	int printerSpeed = 10;
+	int numPrintJobs = 100;
+	int numFinishedJobs = 0;
+	int maxPages = 50;
 	char userSeed;
 	int seedValue;
 	char userOutput = 'Y';
@@ -43,9 +43,9 @@ int main(int argc, char const *argv[]) {
 	int totalPagesPrinted = 0;
 
 	char userPrintSpeed;
-	int *printerArray = NULL;
+	int* printerSpeedArray = NULL;
 
-	UserInput(printerCount, printerSpeed, numPrintJobs, maxPages, simulationTime, userPrintSpeed, printerArray);
+	getSimulationParameters(printerCount, printerSpeed, numPrintJobs, maxPages, userPrintSpeed, printerSpeedArray);
 
 	getSeedRef(userSeed, seedValue);
 
@@ -54,17 +54,17 @@ int main(int argc, char const *argv[]) {
 	// Decide and setup the desired user output format (screen/file)
 	setupOutput(userOutput, fileName, outfile, coutBuffer);
 
-	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages, seedValue, userPrintSpeed, printerArray);
+	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages, seedValue, userPrintSpeed, printerSpeedArray);
 
 	// Setup Scheduler and Printers
 	printScheduler scheduler = printScheduler();
 	printerList printers = printerList(printerCount);
 	printers.setPrintingSpeed(printerSpeed);
 
-	int tick, temp, pageCount, jobID = 1;
+	int tick = 1, temp, pageCount, jobID = 1, numCreatedJobs = 0;
 	int remainder = RAND_MAX % maxPages;
 
-	for (tick = 1; tick <= simulationTime; tick++) {
+	while (numFinishedJobs != numPrintJobs){
 
 		// new print job is scheduled in the queue
    	do{
@@ -77,7 +77,10 @@ int main(int argc, char const *argv[]) {
 
 		cout << endl << "Minute " << tick << ":" << endl;
 
-		scheduler.scheduleNewPrintJob(newJob, cout);
+		if(numCreatedJobs != numPrintJobs){
+			scheduler.scheduleNewPrintJob(newJob, cout);
+			numCreatedJobs ++;
+		}
 
 		// if there are free printers, assign the highest priority job to it!
 		int freePrinterCount = printers.getFreePrinterCount();
@@ -97,9 +100,12 @@ int main(int argc, char const *argv[]) {
 		printers.progressOneMinute(cout, totalPagesPrinted);
 
 		scheduler.calculateWaitingTimes(hwt, mwt, lwt);
+
+		numFinishedJobs = printers.getCompletedJobsCount();
+		tick++;
 	}
 
-	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler, totalPagesPrinted);
+	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler, totalPagesPrinted, tick);
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
@@ -109,27 +115,34 @@ int main(int argc, char const *argv[]) {
 	return 0;
 }
 /*
-	UserInput
+	getSimulationParameters
 	Pre-Condition: the variables must be declared in the callers scope.
 	post-Condition: all of the variables will be set based on the user input.
 */
-void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, int &simulationTime, char &userPrintSpeed, int *printerArray){
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int* printerSpeedArray){
+
+	char userDefaults;
 
 	cout << endl << "••••••••• Welcome to the printer simulation! •••••••••" << endl << endl;
 
-	cout << "Total number of available printers ----- ";
-	cin >> printerCount;
+	cout << "Number of printers: " << printerCount << endl;
+	cout << "Number of simulated print jobs: " << numPrintJobs << endl;
+	cout << "Maximum page count per job: " << maxPages << endl;
+	cout << "Printing speed in pages per minute: " << printerSpeed << endl;
+	cout << endl << "Would you like to use the above default values [Y/N]: ";
+	cin >> userDefaults;
 
-	printerArray = new int[printerCount];
-	getPrintSpeed(userPrintSpeed, printerSpeed, printerCount, printerArray);
-	
-	cout << "Total number of simulated print jobs --- ";
-	cin >> numPrintJobs;
-	cout << "Maximum page count per print job ------- ";
-	cin >> maxPages;
-	cout << "Total simulation time in minutes ------- ";
-	cin >> simulationTime;
+	if (userDefaults == 'n' || userDefaults == 'N') {
+		cout << endl << "Total number of available printers ----- ";
+		cin >> printerCount;
+		cout << "Total number of simulated print jobs --- ";
+		cin >> numPrintJobs;
+		cout << "Maximum page count per print job ------- ";
+		cin >> maxPages;
+		cout << endl;
+	}
 
+	getPrintSpeed(userPrintSpeed, printerSpeed, printerCount, printerSpeedArray);
 }
 
 /*
@@ -137,19 +150,23 @@ void UserInput(int &printerCount, int &printerSpeed, int &numPrintJobs, int &max
 	Pre-Condition: the printer speed(s) are declared in the callers scope
 	Post-Condition: sets the printer speed(s) based on the user input
 */
-void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerArray){
+void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray){
+
+	printerSpeedArray = new int[printerCount];
 
 	cout << "Do the printers print at the same speed [Y/N]: ";
 	cin >> userPrintSpeed;
 
-	if (userPrintSpeed == 'y' || userPrintSpeed == 'Y') {
-		cout << "Printing speed in pages per minute ----- ";
-		cin >> printerSpeed;
-	}else{
-		cout << "Please enter the print speed for each of the printers: " << endl;
-		for (int i=0; i<printerCount; i++) {
-			cout << "Printer " << i+1 << ": ";
-			cin >> printerArray[i];
+	if (userPrintSpeed == 'n' || userPrintSpeed == 'N') {
+		cout << endl << "Please enter the print speed for each printer: " << endl;
+		for (int i=0; i < printerCount; i++) {
+			cout << "   Printer " << i+1 << ": ";
+			cin >> printerSpeedArray[i];
+		}
+		cout << endl;
+	} else {
+		for (int i = 0; i < printerCount; i++) {
+			printerSpeedArray[i] = printerSpeed;
 		}
 	}
 }
@@ -160,12 +177,13 @@ void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, i
 	post-Condition: sets the seed variable based on the user input.
 */
 void getSeedRef(char &userSeed, int &seedValue){
-	cout << "Would you like to provide the seed value [Y/N]: ";
+	cout << "Would you like to use the dault seed value [Y/N]: ";
 	cin >> userSeed;
 
-	if (userSeed == 'y' || userSeed == 'Y') {
-		cout << "Please enter your desired seed value: ";
+	if (userSeed == 'n' || userSeed == 'N') {
+		cout << endl << "Please enter your desired seed value: ";
 		cin >> seedValue;
+		cout << endl;
 	}else{
 		seedValue = time(NULL);
 	}
@@ -203,7 +221,7 @@ void setupOutput(char userOutput, string fileName, ofstream &outStream, streambu
 	}
 }
 
-void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, int *printerArray){
+void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, int *printerSpeedArray){
 
 	cout << "\n••••••••••••••••• BEGIN SIMULATION •••••••••••••••••\n";
 	cout << "   Printers Available: " << printerCount << "\n";
@@ -211,18 +229,19 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 		cout << "   Printing Speed: " << printerSpeed << "\n";
 	}else{
 		for (int i=0; i<printerCount; i++)
-			cout << "	Printing Speed for Printer " << i+1 << ": " << printerArray[i] << "\n"; 
+			cout << "	Printing Speed for Printer " << i+1 << ": " << printerSpeedArray[i] << "\n";
 	}
 	cout << "   Number of print jobs: " << numPrintJobs << "\n";
 	cout << "   Maximum possible page count: " << maxPages << "\n";
 	cout << "   Seed Value: " << seedValue << "\n";
 }
 
-void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted){
+void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted, int tick){
 	cout << "\n••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\n\n";
 	printers->completionReport(cout);
 	cout << "\n";
 
+	cout << "Total simulation time: " << tick << endl;
 	int freePrinterCount = printers->getFreePrinterCount();
 	if (freePrinterCount != 0) {
 		cout << "    Printer(s) ";
