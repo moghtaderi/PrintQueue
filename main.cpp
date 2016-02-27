@@ -16,12 +16,13 @@ int randomFromRangeWithSeed(int min, int max){
    return min + x % n;
 }
 
-void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int *printerSpeedArray);
-void getSeedRef(char &userSeed, int &seedValue);
-void setupOutput(char userOutput,string fileName, ofstream &outStream, streambuf*& coutBuffer);
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int *printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile);
+void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, int *printerSpeedArray);
 void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted, int tick);
-void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray);
+void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray, bool userInputFromFile);
+void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& outStream, streambuf*& cinBuffer, streambuf*& coutBuffer, bool& userInputFromFile, bool& userOutputToFile);
+
 
 int main(int argc, char const *argv[]) {
 
@@ -33,26 +34,28 @@ int main(int argc, char const *argv[]) {
 	int maxPages = 50;
 	char userSeed;
 	int seedValue;
+	char userInput = 'Y';
 	char userOutput = 'Y';
 	string fileName;
 	ofstream outfile;
+	ifstream infile;
 	streambuf* coutBuffer;
+	streambuf* cinBuffer;
 	int hwt = 0;
 	int mwt = 0;
 	int lwt = 0;
 	int totalPagesPrinted = 0;
+	bool userInputFromFile = false;
+	bool userOutputToFile = false;
 
 	char userPrintSpeed;
 	int* printerSpeedArray = NULL;
 
-	getSimulationParameters(printerCount, printerSpeed, numPrintJobs, maxPages, userPrintSpeed, printerSpeedArray);
+	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
 
-	getSeedRef(userSeed, seedValue);
+	getSimulationParameters(printerCount, printerSpeed, numPrintJobs, maxPages, userPrintSpeed, printerSpeedArray, coutBuffer, userSeed, seedValue, userInputFromFile, userOutputToFile);
 
 	srand(seedValue);      // seed based on user input or time if no input provided
-
-	// Decide and setup the desired user output format (screen/file)
-	setupOutput(userOutput, fileName, outfile, coutBuffer);
 
 	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages, seedValue, userPrintSpeed, printerSpeedArray);
 
@@ -79,7 +82,7 @@ int main(int argc, char const *argv[]) {
 
 		if(numCreatedJobs != numPrintJobs){
 			scheduler.scheduleNewPrintJob(newJob, cout);
-			numCreatedJobs ++;
+			numCreatedJobs++;
 		}
 
 		// if there are free printers, assign the highest priority job to it!
@@ -109,7 +112,6 @@ int main(int argc, char const *argv[]) {
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
-	cout << endl;
 	outfile.close();                        // close the output file buffer
 
 	return 0;
@@ -119,30 +121,43 @@ int main(int argc, char const *argv[]) {
 	Pre-Condition: the variables must be declared in the callers scope.
 	post-Condition: all of the variables will be set based on the user input.
 */
-void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int* printerSpeedArray){
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, int* printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile){
 
 	char userDefaults;
+	streambuf* currentBuffer = cout.rdbuf();
 
-	cout << endl << "••••••••• Welcome to the printer simulation! •••••••••" << endl << endl;
+	if (userOutputToFile)
+		cout.rdbuf(coutBuffer);                 // reset cout buffer
 
-	cout << "Number of printers: " << printerCount << endl;
-	cout << "Number of simulated print jobs: " << numPrintJobs << endl;
-	cout << "Maximum page count per job: " << maxPages << endl;
-	cout << "Printing speed in pages per minute: " << printerSpeed << endl;
-	cout << endl << "Would you like to use the above default values [Y/N]: ";
+	if (!userInputFromFile) {
+		cout << "Number of printers: " << printerCount << endl;
+		cout << "Number of simulated print jobs: " << numPrintJobs << endl;
+		cout << "Maximum page count per job: " << maxPages << endl;
+		cout << "Printing speed in pages per minute: " << printerSpeed << endl;
+		cout << endl << "Would you like to use the above default values [Y/N]: ";
+	}
 	cin >> userDefaults;
 
 	if (userDefaults == 'n' || userDefaults == 'N') {
-		cout << endl << "Total number of available printers ----- ";
+		if (!userInputFromFile)
+			cout << endl << "Total number of available printers ----- ";
 		cin >> printerCount;
-		cout << "Total number of simulated print jobs --- ";
+
+		if (!userInputFromFile)
+			cout << "Total number of simulated print jobs --- ";
 		cin >> numPrintJobs;
-		cout << "Maximum page count per print job ------- ";
+
+		if (!userInputFromFile)
+			cout << "Maximum page count per print job ------- ";
 		cin >> maxPages;
+
 		cout << endl;
 	}
 
-	getPrintSpeed(userPrintSpeed, printerSpeed, printerCount, printerSpeedArray);
+	getPrintSpeed(userPrintSpeed, printerSpeed, printerCount, printerSpeedArray, userInputFromFile);
+	getSeedRef(userSeed, seedValue, userInputFromFile);
+
+	cout.rdbuf(currentBuffer);
 }
 
 /*
@@ -150,17 +165,19 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 	Pre-Condition: the printer speed(s) are declared in the callers scope
 	Post-Condition: sets the printer speed(s) based on the user input
 */
-void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray){
+void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, int *printerSpeedArray, bool userInputFromFile){
 
 	printerSpeedArray = new int[printerCount];
-
-	cout << "Do the printers print at the same speed [Y/N]: ";
+	if (!userInputFromFile)
+		cout << "Do all the printers have a speed of 10 pages per minute [Y/N]: ";
 	cin >> userPrintSpeed;
 
 	if (userPrintSpeed == 'n' || userPrintSpeed == 'N') {
-		cout << endl << "Please enter the print speed for each printer: " << endl;
+		if (!userInputFromFile)
+			cout << endl << "Please enter the print speed for each printer: " << endl;
 		for (int i=0; i < printerCount; i++) {
-			cout << "   Printer " << i+1 << ": ";
+			if (!userInputFromFile)
+				cout << "   Printer " << i+1 << ": ";
 			cin >> printerSpeedArray[i];
 		}
 		cout << endl;
@@ -176,12 +193,15 @@ void getPrintSpeed(char& userPrintSpeed, int& printerSpeed, int& printerCount, i
 	Pre-Condition: the seed variable is declared in the callers scope.
 	post-Condition: sets the seed variable based on the user input.
 */
-void getSeedRef(char &userSeed, int &seedValue){
-	cout << "Would you like to use the dault seed value [Y/N]: ";
+void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile){
+
+	if (!userInputFromFile)
+		cout << "Would you like to use the dault seed value [Y/N]: ";
 	cin >> userSeed;
 
 	if (userSeed == 'n' || userSeed == 'N') {
-		cout << endl << "Please enter your desired seed value: ";
+		if (!userInputFromFile)
+			cout << endl << "Please enter your desired seed value: ";
 		cin >> seedValue;
 		cout << endl;
 	}else{
@@ -189,35 +209,65 @@ void getSeedRef(char &userSeed, int &seedValue){
 	}
 }
 
-/*
-	separateOutput
-	Pre-Condition: the variables are decrared in the callers scope
-	Post-Condition: outputs the information to either the screen or a file specified by the user
-*/
-void setupOutput(char userOutput, string fileName, ofstream &outStream, streambuf*& coutBuffer){
+void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& outStream, streambuf*& cinBuffer, streambuf*& coutBuffer, bool& userInputFromFile, bool& userOutputToFile) {
 
-	bool fileIO;
+	string fileName;
+
+	cout << endl << "••••••••• Welcome to the printer simulation! •••••••••" << endl << endl;
+
+	cout << "Would you like to use input from the keyboard  [Y/N]: ";
+	cin >> userInput;
+
+	if (userInput == 'y' || userInput == 'Y') {
+		userInputFromFile = false;
+		// NOTE: no change to std:cin and no input file created
+	}else{
+		userInputFromFile = true;
+
+		cout << endl << "Please enter the name of your input file: ";
+		cin >> fileName;                    // get input file name
+		cout << endl;
+
+    	inStream.open(fileName.c_str());     // open file for write
+
+		if(inStream.fail()) {
+			cerr << "ERROR: could not open file <" << fileName << "> with read access." << endl;
+			cerr << "       Please make sure a file with that name exists in this directory." << endl << endl;
+			exit(1);
+		}
+		// NOTE: AFTER THIS FUNCTION, FOR THE REST OF THE PROGRAM STD:CIN WILL BE READING FROM TO INFILE
+	}
 
 	cout << "Would you like the output on the screen  [Y/N]: ";
 	cin >> userOutput;
+
 	if (userOutput == 'y' || userOutput == 'Y') {
-		fileIO = false;
+		userOutputToFile = false;
 		// NOTE: no change to std:cout and no output file created
 	}else{
-		cout << "Please enter the name of your output file: ";
+		userOutputToFile = true;
+
+		cout << endl << "Please enter the name of your output file: ";
 		cin >> fileName;                    // get output file name
+		cout << endl;
 
-    	outStream.open(fileName.c_str());     // open file for write
+		outStream.open(fileName.c_str());     // open file for write
 
-	   	if(outStream.fail()) {
-	      	cerr << "ERROR: could not create file <" << fileName << ">" << endl;
-	      	exit(1);
-	   	}
+		if(outStream.fail()) {
+			cerr << "ERROR: could not create file <" << fileName << "> with write access." << endl;
+			exit(1);
+		}
+		// NOTE: AFTER THIS FUNCTION, FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
+	}
 
-	   	fileIO = true;
-	   	coutBuffer = cout.rdbuf();          // keep a backup of cout buffer
-	   	cout.rdbuf(outStream.rdbuf());      // redirect cout to output file
-	   	// NOTE: FOR THE REST OF THE PROGRAM STD:COUT WILL BE REDIRECTED TO OUTFILE
+	if (userInputFromFile) {
+		cinBuffer = cin.rdbuf();          // keep a backup of cin buffer
+		cin.rdbuf(inStream.rdbuf());      // redirect cin to input file
+	}
+
+	if (userOutputToFile) {
+		coutBuffer = cout.rdbuf();          // keep a backup of cout buffer
+		cout.rdbuf(outStream.rdbuf());      // redirect cout to output file
 	}
 }
 
