@@ -38,18 +38,14 @@ void calculatePoissonDistribution(vector<double>& distribution, double avgNumPri
 
 int numNewJobsToQueue(double random, vector<double> distribution){
 
-	int i = 0, ans = 0;
-	for (vector<double>::iterator it = distribution.begin() ; it != distribution.end(); it++){
-		cout << i << ": " << *it << endl;
-
+	int i = 0;
+	for (vector<double>::iterator it = distribution.begin(); it != distribution.end(); it++){
 		if(random <= *it){
-			std::cerr << i << std::endl;
-			ans = i;
+			return i;
 		}
 		i++;
 	}
-	std::cerr << i << std::endl;
-	return ans;
+	return i;
 }
 
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
@@ -122,7 +118,7 @@ int main(int argc, char const *argv[]) {
 	vector<double> distribution;
 
 	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
-	cout << "jtq: " << numNewJobsToQueue(0.8, distribution) << endl << endl;
+	cout << "jtq: " << numNewJobsToQueue(0.99, distribution) << endl << endl;
 
 	// choose between file vs. standard input and output paths
 	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
