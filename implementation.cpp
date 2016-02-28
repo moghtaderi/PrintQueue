@@ -38,6 +38,7 @@ printer::printer() {
 	printerBusy = false;
 	completedJobs = 0;
 	partialPages = 0.0;
+	printerOnline = true;
 }
 
 void printer::setJob(printJob &newJob) {
@@ -87,6 +88,14 @@ int printer::getPrinterID(void){
 
 int printer::getCompletedJobs(void){
 	return completedJobs;
+}
+
+void printer::setPrinterOnline(void) {
+	printerOnline = true;
+}
+
+void printer::setPrinterOffline(void) {
+	printerOnline = false;
 }
 
 //PRIVATE MEMBER FUNCTIONS=============

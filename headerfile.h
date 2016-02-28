@@ -85,6 +85,10 @@ public:
 	//Post-condition: returns the completed job count
 	int getCompletedJobs(void);
 
+
+	void setPrinterOnline(void);
+	void setPrinterOffline(void);
+
 private:
 	int printerID;
 	double printSpeed; //???
@@ -94,6 +98,7 @@ private:
 	double partialPages;
 	double printCost;
 	int maintenanceThreshold;
+	bool printerOnline;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
