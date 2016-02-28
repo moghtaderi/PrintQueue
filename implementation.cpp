@@ -49,6 +49,10 @@ void printer::setPrintSpeed(double ps){
 	printSpeed = ps;
 }
 
+void printer::setPrintCost(double pc){
+	printCost = pc;
+}
+
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
 	int remainingPages, wholePages;
 
@@ -101,6 +105,12 @@ printerList::printerList(int printerCount) {
 void printerList::setPrintingSpeed(double* PSA){
 	for (int i = 0; i < numberOfPrinters; i++) {
 		printers[i].setPrintSpeed(PSA[i]);  // tell the printer what's its speed
+	}
+}
+
+void printerList::setPrintingCost(double* PCA){
+	for (int i = 0; i < numberOfPrinters; i++) {
+		printers[i].setPrintCost(PCA[i]);  // tell the printer what's its speed
 	}
 }
 

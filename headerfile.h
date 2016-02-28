@@ -69,6 +69,8 @@ public:
 	//Post-condition: sets the printer speed
 	void setPrintSpeed(double ps);
 
+	void setPrintCost(double pc);
+
 	//getPrinterID
 	//Function that returns the printer number
 	//Pre-condition: none
@@ -88,6 +90,7 @@ private:
 	bool printerBusy;
 	int completedJobs;
 	double partialPages;
+	double printCost;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
@@ -133,6 +136,8 @@ public:
 
 
 	void setPrintingSpeed(double* PSA);
+
+	void setPrintingCost(double* PCA);
 
 	//listFreePrinters
 	//Function to output a list of free printers
