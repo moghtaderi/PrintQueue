@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <math.h>
 
 using namespace std;
 
@@ -14,6 +16,40 @@ int randomFromRangeWithSeed(int min, int max){
    	x = rand();
    }while (x >= RAND_MAX - remainder);
    return min + x % n;
+}
+
+int Factorial(int n) {
+	return (n == 1 || n == 0) ? 1 : Factorial(n - 1) * n;
+}
+
+void calculatePoissonDistribution(vector<double>& distribution, double avgNumPrintJobsPerMinute){
+
+	double total = 0.0;
+	int k = 0;
+	double newValue = 0.0;
+
+	while (total <= 0.95) {
+		newValue = (pow(avgNumPrintJobsPerMinute, k)*exp(-1*avgNumPrintJobsPerMinute))/Factorial(k);
+		k++;
+		total+=newValue;
+		distribution.push_back(total);
+	}
+}
+
+int numNewJobsToQueue(double random, vector<double> distribution){
+
+	int i = 0, ans = 0;
+	for (vector<double>::iterator it = distribution.begin() ; it != distribution.end(); it++){
+		cout << i << ": " << *it << endl;
+
+		if(random <= *it){
+			std::cerr << i << std::endl;
+			ans = i;
+		}
+		i++;
+	}
+	std::cerr << i << std::endl;
+	return ans;
 }
 
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
@@ -53,7 +89,7 @@ int main(int argc, char const *argv[]) {
 	int printerCount = 3;
 	int printerSpeed = 10;
 	int numPrintJobs = 100;
-	double avgNumPrintJobsPerMinute = 1.5;
+	double avgNumPrintJobsPerMinute = 2.0;
 	double costPerPage = 0.2;
 	int numFinishedJobs = 0;
 	int maxPages = 50;
@@ -83,6 +119,10 @@ int main(int argc, char const *argv[]) {
 	int priorityCount;
 	int* priorityQueueCutOffs = NULL;
 	int maintenanceThreshold = 10;
+	vector<double> distribution;
+
+	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
+	cout << "jtq: " << numNewJobsToQueue(0.8, distribution) << endl << endl;
 
 	// choose between file vs. standard input and output paths
 	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
@@ -93,6 +133,10 @@ int main(int argc, char const *argv[]) {
 									seedValue, userInputFromFile, userOutputToFile, priorityCount,
 									priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage,
 									userPrintCost, printerCostArray, maintenanceThreshold);
+
+	// setup distribution vector
+
+
 
 	// Set the randomization seed based on user request
 	srand(seedValue);
@@ -156,6 +200,11 @@ int main(int argc, char const *argv[]) {
 
 	return 0;
 }
+
+
+
+
+
 /*
 	getSimulationParameters
 	Pre-Condition: the variables must be declared in the callers scope.
@@ -405,10 +454,10 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 	cout << "\n••••••••••••••••• BEGIN SIMULATION •••••••••••••••••\n";
 	cout << "   Printers Available: " << printerCount << "\n";
 	if (userPrintSpeed == 'y' || userPrintSpeed == 'Y') {
-		cout << "  Printing Speed: " << printerSpeed << "\n";
+		cout << "   Printing Speed: " << printerSpeed << "\n";
 	}else{
 		for (int i=0; i<printerCount; i++)
-			cout << "  Printing Speed for Printer " << i+1 << ": " << printerSpeedArray[i] << "\n";
+			cout << "   Printing Speed for Printer " << i+1 << ": " << printerSpeedArray[i] << "\n";
 	}
 	cout << "   Number of print jobs: " << numPrintJobs << "\n";
 	cout << "   Maximum possible page count: " << maxPages << "\n";
@@ -417,7 +466,7 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 
 void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler,
 	                          int totalPagesPrinted, int tick){
-										  
+
 	cout << "\n••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\n\n";
 	printers->completionReport(cout);
 	cout << "\n";
