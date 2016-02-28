@@ -48,11 +48,38 @@ int numNewJobsToQueue(double random, vector<double> distribution){
 	return i;
 }
 
+int newJobPriorityLevel(double random, int priorityCount){
+	double total = 0.0;
+	int i;
+	for (i = 1; i < priorityCount; i++) {
+		total += 1.0/(double)(2+i);
+		if (random <= total) {
+			return i-1;
+		}
+	}
+	return i-1;
+}
+
+
+int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
+
+	int low, high;
+
+	if (cutoffIndex == 0){
+			low = 0;
+	} else {
+			low = priorityQueueCutOffs[cutoffIndex-1]+1;
+	}
+		high = priorityQueueCutOffs[cutoffIndex];
+
+	return rand()%(high-low)+low;
+}
+
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
                              int &maxPages, char &userPrintSpeed, double*& printerSpeedArray,
 									  streambuf* coutBuffer, char &userSeed, int &seedValue,
 									  bool userInputFromFile, bool userOutputToFile,
-									  int& priorityCount, int* priorityQueueCutOffs,
+									  int& priorityCount, int*& priorityQueueCutOffs,
 									  double& avgNumPrintJobsPerMinute, double& costPerPage,
 									  char& userPrintCost, double*& printerCostArray,
 									  int& maintenanceThreshold);
@@ -76,7 +103,7 @@ void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& ou
 void getPrintCost(char& userPrintCost, double costPerPage, int printerCount,
 	               double*& printerCostArray, bool userInputFromFile);
 
-void getPriorityQueueDetails(int& priorityCount, int* priorityQueueCutOffs, int maxPages);
+void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages);
 
 
 int main(int argc, char const *argv[]) {
@@ -85,7 +112,7 @@ int main(int argc, char const *argv[]) {
 	int printerCount = 3;
 	int printerSpeed = 10;
 	int numPrintJobs = 100;
-	double avgNumPrintJobsPerMinute = 2.0;
+	double avgNumPrintJobsPerMinute = 1.5;
 	double costPerPage = 0.2;
 	int numFinishedJobs = 0;
 	int maxPages = 50;
@@ -109,16 +136,12 @@ int main(int argc, char const *argv[]) {
 	double* printerSpeedArray = NULL;
 	double* printerCostArray = NULL;
 	int tick = 1;
-	int pageCount;
 	int jobID = 1;
 	int numCreatedJobs = 0;
 	int priorityCount;
 	int* priorityQueueCutOffs = NULL;
 	int maintenanceThreshold = 10;
 	vector<double> distribution;
-
-	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
-	cout << "jtq: " << numNewJobsToQueue(0.99, distribution) << endl << endl;
 
 	// choose between file vs. standard input and output paths
 	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
@@ -131,8 +154,7 @@ int main(int argc, char const *argv[]) {
 									userPrintCost, printerCostArray, maintenanceThreshold);
 
 	// setup distribution vector
-
-
+	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
 
 	// Set the randomization seed based on user request
 	srand(seedValue);
@@ -151,16 +173,21 @@ int main(int argc, char const *argv[]) {
 	// Main loop
 	while (numFinishedJobs != numPrintJobs){
 
-		//poisson
-
-   	pageCount = rand() % maxPages;
-		printJob *newJob = new printJob(pageCount, jobID++);
-
 		cout << endl << "Minute " << tick << ":" << endl;
 
-		if(numCreatedJobs != numPrintJobs){
-			scheduler.scheduleNewPrintJob(newJob, cout);
-			numCreatedJobs++;
+		//find out how many new jobs to add based on our poisson distribution
+		int numNewJobs = numNewJobsToQueue((rand()%RAND_MAX)/(double)RAND_MAX, distribution);
+
+		for (int i = 0; i < numNewJobs; i++) {
+			int cutoffIndex = newJobPriorityLevel((rand()%RAND_MAX)/(double)RAND_MAX, priorityCount);
+			int pageCount = newJobPageCount(cutoffIndex, priorityQueueCutOffs, priorityCount);
+
+			printJob* newJob = new printJob(pageCount, jobID++);
+
+			if(numCreatedJobs != numPrintJobs){
+				scheduler.scheduleNewPrintJob(newJob, cout);
+				numCreatedJobs++;
+			}
 		}
 
 		// if there are free printers, assign the highest priority job to it!
@@ -209,7 +236,7 @@ int main(int argc, char const *argv[]) {
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages,
 	                          char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer,
 									  char &userSeed, int &seedValue, bool userInputFromFile,
-									  bool userOutputToFile, int& priorityCount, int* priorityQueueCutOffs,
+									  bool userOutputToFile, int& priorityCount, int*& priorityQueueCutOffs,
 									  double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost,
 									  double*& printerCostArray, int& maintenanceThreshold){
 
@@ -295,7 +322,7 @@ void getPrintCost(char& userPrintCost, double costPerPage, int printerCount, dou
 }
 
 
-void getPriorityQueueDetails(int& priorityCount, int* priorityQueueCutOffs, int maxPages) {
+void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages) {
 	cout << endl << "How many priority levels do you have: ";
 	cin >> priorityCount;
 	while (priorityCount < 1) {
