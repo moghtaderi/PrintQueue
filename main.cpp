@@ -185,7 +185,7 @@ int main(int argc, char const *argv[]) {
 			printJob* newJob = new printJob(pageCount, jobID++);
 
 			if(numCreatedJobs != numPrintJobs){
-				scheduler.scheduleNewPrintJob(newJob, cout);
+				scheduler.scheduleNewPrintJob(newJob, cout, cutoffIndex);
 				numCreatedJobs++;
 			}
 		}
@@ -202,7 +202,7 @@ int main(int argc, char const *argv[]) {
 		}
 
 		// process as many jobs as there are free printers
-		scheduler.processJobs(freePrinterCount, printers, cout);
+		scheduler.processJobs(freePrinterCount, printers, cout, priorityCount);
 
 		// let all the printers progress for one minute
 		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray);

@@ -222,54 +222,34 @@ printScheduler::printScheduler(int* priorityQueueCutOffs, int priorityCount){
 	queueArray = new printJobWaitingQueue[priorityCount];
 }
 
-void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream) {
+void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex) {
 	int pageCount = npj->getPageCount();
-	if(pageCount < 10){
 
-		highPriority.push(npj);
-		outStream << "    New " << pageCount << " page job with ID:" << npj->getJobID() << " got assigned to HIGH PRIOROTY queue!\n";
-	}else if(pageCount < 20){
-
-		mediumPriority.push(npj);
-		outStream << "    New " << pageCount << " page job with ID " << npj->getJobID() << " got assigned to MEDIUM PRIOROTY queue!\n";
-	}else{
-
-		lowPriority.push(npj);
-
-		outStream << "    New " << pageCount << " page job with ID:" << npj->getJobID() << " got assigned to LOW PRIOROTY queue!\n";
-	}
+	queueArray[cutoffIndex].push(npj);
+	outStream << "    New " << pageCount << " page job with ID: " << npj->getJobID();
+	outStream << " got assigned to priority queue level: " << cutoffIndex << "\n";
 }
 
-void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream) {
+void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount) {
 	printJob* newJob;
-	bool checkQueue = true;
+	//bool checkQueue = true;
+	bool assignedOneJob;
+	int priorityLevel = 0;
 
 	// Get the job based on priority
 	while (attempts != 0){
-		if(!highPriority.isEmpty()){
-			newJob = highPriority.front();
-			highPriority.pop();
-			outStream << "    Job " << newJob->getJobID() << " Taken from HIGH PRIOROTY queue";
-			plist.assignNewJob(*newJob, outStream);
 
-		}else if(!mediumPriority.isEmpty()){
-			newJob = mediumPriority.front();
-			mediumPriority.pop();
-			outStream << "    Job " << newJob->getJobID() << " Taken from MEDIUM PRIOROTY queue";
-			plist.assignNewJob(*newJob, outStream);
-
-		}else if(!lowPriority.isEmpty()){
-			newJob = lowPriority.front();
-			lowPriority.pop();
-			outStream << "    Job " << newJob->getJobID() << " Taken from LOW PRIOROTY queue";
-			plist.assignNewJob(*newJob, outStream);
-
-		}else if(checkQueue) {
-			// no more jobs left but free printers that are available
-			outStream << "    No more jobs available in the scheduler for free printers: ";
-			plist.listFreePrinters(outStream);
-			outStream << "\n";
-			checkQueue = false;
+		assignedOneJob = false;
+		while(priorityLevel != priorityCount && !assignedOneJob){
+			if(!queueArray[priorityLevel].isEmpty()){
+				newJob = queueArray[priorityLevel].front();
+				queueArray[priorityLevel].pop();
+				outStream << "    Job " << newJob->getJobID() << " Taken from priority queue level " << priorityLevel;
+				plist.assignNewJob(*newJob, outStream);
+				assignedOneJob = true;
+			} else {
+				priorityLevel++;
+			}
 		}
 
 		attempts--;

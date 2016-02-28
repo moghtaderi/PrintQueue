@@ -205,14 +205,14 @@ public:
 	//npj: new print job
 	//Pre-condition: new print job, ostream
 	//Post-condition: schedules the jobs' priorities
-	void scheduleNewPrintJob(printJob* npj, std::ostream& outStream);
+	void scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex);
 
 	//processJobs
 	//Function to process the jobs based on priority
 	//attempts: the number of free printers
 	//Pre-condition: number of attempts to grab a free printer, list of printers, ostream
 	//Post-condition: outputs the jobs taken from different priority queues
-	void processJobs(int attempts, printerList& plist, std::ostream& outStream);
+	void processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount);
 
 	void calculateWaitingTimes(int& high, int& med, int& low);
 	int getLeftoverJobCount(void);
