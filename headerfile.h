@@ -21,7 +21,7 @@ public:
 	//Function that "prints" at the speed given by the user
 	//Pre-condition: the print speed given by the user
 	//Post-condition: returns the number of pages printed
-	int printAtSpeed(int printerSpeed, int& totalPagesPrinted);
+	int printAtSpeed(int wholePages, int& totalPagesPrinted);
 
 	//getJobID
 	//Function that gets the job ID
@@ -67,7 +67,7 @@ public:
 	//Pre-condition: the printer speed given by the user
 	//ps: print speed
 	//Post-condition: sets the printer speed
-	void setPrintSpeed(int ps);
+	void setPrintSpeed(double ps);
 
 	//getPrinterID
 	//Function that returns the printer number
@@ -83,10 +83,11 @@ public:
 
 private:
 	int printerID;
-	int printSpeed;
+	double printSpeed; //???
 	printJob *currentPrintJob;
 	bool printerBusy;
 	int completedJobs;
+	double partialPages;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
@@ -115,7 +116,7 @@ public:
 	//Function to increase the progress of each printer each minute
 	//Pre-condition: none
 	//Post-condition: increments the progress of each printer in the queue
-	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA);
 
 	//getFreePrinterCount
 	//Function that returns the number of free printers
@@ -130,11 +131,8 @@ public:
 	//Post-condition: assigns a free printer a new print job
 	void assignNewJob(printJob &npj, std::ostream& outStream);
 
-	//setPrintingSpeed
-	//Function to set the printer speed for all printers
-	//Pre-condition: printer speed given by the user
-	//Post-condition: sets the printing speed for all printers
-	void setPrintingSpeed(int printSpeed);
+
+	void setPrintingSpeed(double* PSA);
 
 	//listFreePrinters
 	//Function to output a list of free printers
@@ -185,7 +183,7 @@ printScheduler class
 class printScheduler {
 public:
 	//printScheduler constructor
-	printScheduler();
+	printScheduler(int* priorityQueueCutOffs, int priorityCount);
 
 	//scheduleNewPrintJob
 	//Function that assigns the priority of the jobs
@@ -208,4 +206,6 @@ private:
 	printJobWaitingQueue highPriority;
 	printJobWaitingQueue mediumPriority;
 	printJobWaitingQueue lowPriority;
+
+	printJobWaitingQueue* queueArray;
 };

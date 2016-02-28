@@ -16,10 +16,10 @@ int printJob::getPageCount(void) {
 	return pageCount;
 }
 
-int printJob::printAtSpeed(int printerSpeed, int& totalPagesPrinted){
+int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted){
 
-	totalPagesPrinted += printerSpeed;
-	pageCount -= printerSpeed;
+	totalPagesPrinted += wholePages;
+	pageCount -= wholePages;
 	if (pageCount < 0) {
 		 pageCount = 0;
 	}
@@ -37,6 +37,7 @@ printer::printer() {
 	printerID = ++pid;
 	printerBusy = false;
 	completedJobs = 0;
+	partialPages = 0.0;
 }
 
 void printer::setJob(printJob &newJob) {
@@ -44,15 +45,20 @@ void printer::setJob(printJob &newJob) {
 	setPrinterBusy();
 }
 
-void printer::setPrintSpeed(int ps){
+void printer::setPrintSpeed(double ps){
 	printSpeed = ps;
 }
 
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
-	int remainingPages;
+	int remainingPages, wholePages;
 
 	if (printerBusy) {
-		remainingPages = currentPrintJob->printAtSpeed(printSpeed, totalPagesPrinted);
+
+		partialPages += printSpeed;
+		wholePages = (int)partialPages;
+		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted);
+		partialPages -= wholePages;
+
 		if (remainingPages != 0) {
 			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";
 		}else{
@@ -92,15 +98,20 @@ printerList::printerList(int printerCount) {
 	printers = new printer[numberOfPrinters];
 }
 
-void printerList::setPrintingSpeed(int printSpeed){
+void printerList::setPrintingSpeed(double* PSA){
 	for (int i = 0; i < numberOfPrinters; i++) {
-		printers[i].setPrintSpeed(printSpeed);
+		printers[i].setPrintSpeed(PSA[i]);  // tell the printer what's its speed
 	}
 }
 
-void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
+void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA) {
+	int wholePages = 0;
 	outStream << "    =========== Printer Status ===========\n";
 	for (int i = 0; i < numberOfPrinters; i++) {
+
+		// printerSpeedArray[i] += PSA[i];    // add printer speeds i.e. 0.7+0.7 = 1.4 - 1 = 0.4  ... 0.4+0.7 = 1.1 - 1 = 0.1 ...
+		// wholePages = (int)printerSpeedArray[i];
+		// printerSpeedArray[i] -= wholePages;
 		printers[i].progressOneMinute(outStream, totalPagesPrinted);
 	}
 	outStream << "    ======================================\n";
@@ -178,8 +189,8 @@ bool printJobWaitingQueue::isEmpty(void) {
 
 //*********************************************************************
 //printScheduler class functions
-printScheduler::printScheduler(){
-
+printScheduler::printScheduler(int* priorityQueueCutOffs, int priorityCount){
+	queueArray = new printJobWaitingQueue[priorityCount];
 }
 
 void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream) {
