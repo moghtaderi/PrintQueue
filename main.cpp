@@ -16,7 +16,7 @@ int randomFromRangeWithSeed(int min, int max){
    return min + x % n;
 }
 
-void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile, int& priorityCount, int* priorityQueueCutOffs, double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost, double*& printerCostArray);
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile, int& priorityCount, int* priorityQueueCutOffs, double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost, double*& printerCostArray, int& maintenanceThreshold);
 void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, int seedValue, char userPrintSpeed, double* printerSpeedArray);
 void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler, int totalPagesPrinted, int tick);
@@ -60,12 +60,13 @@ int main(int argc, char const *argv[]) {
 	int numCreatedJobs = 0;
 	int priorityCount;
 	int* priorityQueueCutOffs = NULL;
+	int maintenanceThreshold = 10;
 
 	// choose between file vs. standard input and output paths
 	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
 
 	// Establish all user inputs for the simulation
-	getSimulationParameters(printerCount, printerSpeed, numPrintJobs, maxPages, userPrintSpeed, printerSpeedArray, coutBuffer, userSeed, seedValue, userInputFromFile, userOutputToFile, priorityCount, priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage, userPrintCost, printerCostArray);
+	getSimulationParameters(printerCount, printerSpeed, numPrintJobs, maxPages, userPrintSpeed, printerSpeedArray, coutBuffer, userSeed, seedValue, userInputFromFile, userOutputToFile, priorityCount, priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage, userPrintCost, printerCostArray, maintenanceThreshold);
 
 	// Set the randomization seed based on user request
 	srand(seedValue);
@@ -78,7 +79,8 @@ int main(int argc, char const *argv[]) {
 	printerList printers = printerList(printerCount);
 	printers.setPrintingSpeed(printerSpeedArray);
 	printers.setPrintingCost(printerCostArray);
-
+	printers.setPrintingMaintenanceThreshold(maintenanceThreshold);
+	
 	// Main loop
 	while (numFinishedJobs != numPrintJobs){
 
@@ -132,7 +134,7 @@ int main(int argc, char const *argv[]) {
 	Pre-Condition: the variables must be declared in the callers scope.
 	post-Condition: all of the variables will be set based on the user input.
 */
-void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile, int& priorityCount, int* priorityQueueCutOffs, double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost, double*& printerCostArray){
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages, char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer, char &userSeed, int &seedValue, bool userInputFromFile, bool userOutputToFile, int& priorityCount, int* priorityQueueCutOffs, double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost, double*& printerCostArray, int& maintenanceThreshold){
 
 	char userDefaults;
 	streambuf* currentBuffer = cout.rdbuf();
@@ -147,6 +149,7 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		cout << "Average number of print jobs per minute: " << avgNumPrintJobsPerMinute << endl;
 		cout << "Printing speed in pages per minute: " << printerSpeed << endl;
 		cout << "Cost per printed page (USD): " << costPerPage << endl;
+		cout << "Number of printed pages before requiring maintenance: " << maintenanceThreshold << endl;
 		cout << endl << "Would you like to use the above default values [Y/N]: ";
 	}
 	cin >> userDefaults;
@@ -167,6 +170,10 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		if (!userInputFromFile)
 			cout << "Average number of print jobs per minute -- ";
 		cin >> avgNumPrintJobsPerMinute;
+
+		if (!userInputFromFile)
+			cout << "Maintenance break printed page count ----- ";
+		cin >> maintenanceThreshold;
 
 		cout << endl;
 	}

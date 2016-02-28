@@ -73,6 +73,10 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted)
 	}
 }
 
+void printer::setMaintenanceThreshold(int mt){
+	maintenanceThreshold = mt;
+}
+
 bool printer::isFree(void){
 	return !printerBusy;
 }
@@ -104,13 +108,19 @@ printerList::printerList(int printerCount) {
 
 void printerList::setPrintingSpeed(double* PSA){
 	for (int i = 0; i < numberOfPrinters; i++) {
-		printers[i].setPrintSpeed(PSA[i]);  // tell the printer what's its speed
+		printers[i].setPrintSpeed(PSA[i]);
 	}
 }
 
 void printerList::setPrintingCost(double* PCA){
 	for (int i = 0; i < numberOfPrinters; i++) {
-		printers[i].setPrintCost(PCA[i]);  // tell the printer what's its speed
+		printers[i].setPrintCost(PCA[i]);
+	}
+}
+
+void printerList::setPrintingMaintenanceThreshold(int MT){
+	for (int i = 0; i < numberOfPrinters; i++) {
+		printers[i].setMaintenanceThreshold(MT);
 	}
 }
 

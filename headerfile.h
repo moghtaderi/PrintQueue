@@ -71,6 +71,8 @@ public:
 
 	void setPrintCost(double pc);
 
+	void setMaintenanceThreshold(int mt);
+
 	//getPrinterID
 	//Function that returns the printer number
 	//Pre-condition: none
@@ -91,6 +93,7 @@ private:
 	int completedJobs;
 	double partialPages;
 	double printCost;
+	int maintenanceThreshold;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
@@ -138,6 +141,8 @@ public:
 	void setPrintingSpeed(double* PSA);
 
 	void setPrintingCost(double* PCA);
+
+	void setPrintingMaintenanceThreshold(int MT);
 
 	//listFreePrinters
 	//Function to output a list of free printers
