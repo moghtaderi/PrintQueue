@@ -158,14 +158,14 @@ int printerList::getFreePrinterCount(void) {
 }
 
 void printerList::assignNewJob(printJob &npj, std::ostream& outStream) {
-	bool assignmentCompleted = false;
-	for (int i = 0; i < numberOfPrinters && !assignmentCompleted; i++) {
-		if (printers[i].isFree()){
-			printers[i].setJob(npj);
-			outStream << ": got assigned to printer " << printers[i].getPrinterID() << "\n";
-			assignmentCompleted = true;
-		}
-	}
+	int i;
+
+	do {
+		i = rand()%numberOfPrinters;
+	} while(!printers[i].isFree());
+
+	printers[i].setJob(npj);
+	outStream << ": got assigned to printer " << printers[i].getPrinterID() << "\n";
 }
 
 void printerList::listFreePrinters(std::ostream& outStream) {
