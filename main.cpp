@@ -64,6 +64,7 @@ int newJobPriorityLevel(double random, int priorityCount){
 int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
 
 	int low, high;
+	int rand_catch;
 
 	if (cutoffIndex == 0){
 			low = 0;
@@ -72,7 +73,12 @@ int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCoun
 	}
 		high = priorityQueueCutOffs[cutoffIndex];
 
-	return rand()%(high-low)+low;
+	rand_catch = rand()%(high-low)+low;
+	if(rand_catch == 0){
+		return rand_catch+1;
+	}else
+		return rand_catch;
+
 }
 
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
