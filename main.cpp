@@ -496,9 +496,8 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 		cout << "   Priority Queue " << i+1 << " Cutoff: " << priorityQueueCutOffs[i] << "\n";
 	}
 	cout << "   Average Number of Jobs per Minute: " << avgNumPrintJobsPerMinute << "\n";
-	cout << "   Cost Per Page: " << costPerPage << "\n";
 	for(int i=0; i<printerCount; i++){
-		cout << "   Printer " << i+1 << " Cost :" << printerCostArray[i] << "\n";
+		cout << "   Printer " << i+1 << " Cost per page:" << printerCostArray[i] << "\n";
 	}
 	cout << "   Printers require maintenance after: " << maintenanceThreshold << " Pages \n";
 	

@@ -16,13 +16,19 @@ int printJob::getPageCount(void) {
 	return pageCount;
 }
 
-int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted){
+int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printCost, double &totalInkCost){
 
+	int initialPageCount = pageCount;
 	totalPagesPrinted += wholePages;
 	pageCount -= wholePages;
+
 	if (pageCount < 0) {
 		 pageCount = 0;
 	}
+
+	int printedPageCount = initialPageCount - pageCount;
+	totalInkCost += printedPageCount * printCost;
+
 	return pageCount;
 }
 
@@ -39,6 +45,7 @@ printer::printer() {
 	completedJobs = 0;
 	partialPages = 0.0;
 	printerOnline = true;
+	totalInkCost = 0.0;
 }
 
 void printer::setJob(printJob &newJob) {
@@ -54,6 +61,10 @@ void printer::setPrintCost(double pc){
 	printCost = pc;
 }
 
+double printer::getPrintCost(void){
+	return totalInkCost;
+}
+
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
 	int remainingPages, wholePages;
 
@@ -61,8 +72,14 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted)
 
 		partialPages += printSpeed;
 		wholePages = (int)partialPages;
-		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted);
+		
+		std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
+
+		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
+
 		partialPages -= wholePages;
+
+		std::cerr << printerID << " : whole pages: "<< wholePages << " total cost: " << totalInkCost << "\n";
 
 		if (remainingPages != 0) {
 			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";

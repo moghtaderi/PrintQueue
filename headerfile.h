@@ -27,7 +27,7 @@ public:
 	//Function that "prints" at the speed given by the user
 	//Pre-condition: the print speed given by the user
 	//Post-condition: returns the number of pages printed
-	int printAtSpeed(int wholePages, int& totalPagesPrinted);
+	int printAtSpeed(int wholePages, int& totalPagesPrinted, double printCost, double &totalInkCost);
 
 	//getJobID
 	//Function that gets the job ID
@@ -77,6 +77,8 @@ public:
 
 	void setPrintCost(double pc);
 
+	double getPrintCost(void);
+
 	void setMaintenanceThreshold(int mt);
 
 	//getPrinterID
@@ -105,6 +107,7 @@ private:
 	double printCost;
 	int maintenanceThreshold;
 	bool printerOnline;
+	double totalInkCost;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
