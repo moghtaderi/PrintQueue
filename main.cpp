@@ -235,7 +235,7 @@ int main(int argc, char const *argv[]) {
 		scheduler.processJobs(freePrinterCount, printers, cout, priorityCount);
 
 		// let all the printers progress for one minute
-		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray, jamTime, jamPrecentage);
+		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray, jamTime, jamPrecentage, maintenanceTime);
 
 		// keep track of all the wait times based on the queues
 		//scheduler.calculateWaitingTimes();
@@ -286,8 +286,8 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		cout << "Cost per printed page (USD): " << costPerPage << endl;
 		cout << "Number of printed pages before requiring maintenance: " << maintenanceThreshold << endl;
 		cout << "Time needed to perform the maintenance: " << maintenanceTime << endl;
-		cout << "Time needed to clear jam: " << jamTime << endl;
-		cout << "Precentage that a job will Jam: " << jamPrecentage << endl;
+		cout << "Time needed to fix a jammed printer: " << jamTime << endl;
+		cout << "Jamming liklihood as a percentage (decimals): " << jamPrecentage << endl;
 		cout << endl << "Would you like to use the above default values [Y/N]: ";
 	}
 	cin >> userDefaults;
@@ -318,11 +318,11 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		cin >> maintenanceTime;
 
 		if (!userInputFromFile)
-			cout << "Time Required to clear a paper jam in minutes -------- ";
+			cout << "Jam fix time in minutes ------------------ ";
 		cin >> jamTime;
 
 		if (!userInputFromFile)
-			cout << "Precentage of times the printer will jam in decimal form -------- ";
+			cout << "Jam liklihood in decimal percentage ------ ";
 		cin >> jamPrecentage;
 
 		cout << endl;

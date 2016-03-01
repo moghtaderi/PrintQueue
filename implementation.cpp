@@ -67,44 +67,64 @@ double printer::getPrintCost(void){
 	return totalInkCost;
 }
 
-void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage) {
+void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage, int maintenanceTime) {
 	int remainingPages, wholePages;
 
-	if (printerBusy) {
+	if(printerOnline) {
 
-		if ((rand()%1000)/1000.0 <= jamPrecentage)
-			jamTimeLeft = jamTime;
+		if (printerBusy) {
 
-		//check if jammed
-		if(jamTimeLeft == 0){
+			if ((rand()%1000)/1000.0 <= jamPrecentage)
+				jamTimeLeft = jamTime;
 
-			partialPages += printSpeed;
-			wholePages = (int)partialPages;
-			remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
-			partialPages -= wholePages;
+			//check if not jammed
+			if(jamTimeLeft == 0){
 
-			if (remainingPages != 0) {
-				outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
+				partialPages += printSpeed;
+				wholePages = (int)partialPages;
+				remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
+				
+				partialPages -= wholePages;
+				maintenanceThresholdLeft -= wholePages;
+
+				if(maintenanceThresholdLeft <= 0)
+					setPrinterOffline(maintenanceTime);
+
+				if (remainingPages != 0) {
+					outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
+				}else{
+					outStream << "      Printer " << printerID << " has finished printing! \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
+					completedJobs++;
+					setPrinterFree();
+				}
+
 			}else{
-				outStream << "      Printer " << printerID << " has finished printing! \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
-				completedJobs++;
-				setPrinterFree();
+					outStream << "      *** Printer " << printerID << " is jammed for " << jamTimeLeft << " more minutes ***\n";
 			}
+		}
 
-		}else{
-				outStream << "      *** Printer " << printerID << " is jammed for " << jamTimeLeft << " more minutes ***\n";
+		jamTimeLeft--;
+		if (jamTimeLeft < 0) {
+			jamTimeLeft = 0;
+		}
+
+	}else{
+		outStream << "      ### Printer " << printerID << " is OFFLINE for " << maintenanceTimeLeft << " more minutes ### \n";
+		maintenanceTimeLeft--;
+		if (maintenanceTimeLeft <= 0) {
+			maintenanceTimeLeft = 0;
+			// done with maintenance... ready for another X pages!
+			maintenanceThresholdLeft = maintenanceThreshold;
+			setPrinterOnline();
 		}
 	}
 
-	//decrement counter
-	jamTimeLeft--;
-	if (jamTimeLeft < 0) {
-		jamTimeLeft = 0;
-	}
+	
 }
 
 void printer::setMaintenanceThreshold(int mt){
 	maintenanceThreshold = mt;
+	maintenanceThresholdLeft = maintenanceThreshold;
 }
 
 bool printer::isFree(void){
@@ -123,8 +143,9 @@ void printer::setPrinterOnline(void) {
 	printerOnline = true;
 }
 
-void printer::setPrinterOffline(void) {
+void printer::setPrinterOffline(int maintenanceTime) {
 	printerOnline = false;
+	maintenanceTimeLeft = maintenanceTime;
 }
 
 //PRIVATE MEMBER FUNCTIONS=============
@@ -168,7 +189,7 @@ void printerList::setPrintingMaintenanceThreshold(int MT){
 // 	}
 // }
 
-void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPrecentage) {
+void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPrecentage, int maintenanceTime) {
 	int wholePages = 0;
 	outStream << "    =========== Printer Status ===========\n";
 	for (int i = 0; i < numberOfPrinters; i++) {
@@ -176,7 +197,7 @@ void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrin
 		// printerSpeedArray[i] += PSA[i];    // add printer speeds i.e. 0.7+0.7 = 1.4 - 1 = 0.4  ... 0.4+0.7 = 1.1 - 1 = 0.1 ...
 		// wholePages = (int)printerSpeedArray[i];
 		// printerSpeedArray[i] -= wholePages;
-		printers[i].progressOneMinute(outStream, totalPagesPrinted, jamTime, jamPrecentage);
+		printers[i].progressOneMinute(outStream, totalPagesPrinted, jamTime, jamPrecentage, maintenanceTime);
 	}
 	outStream << "    ======================================\n";
 }
