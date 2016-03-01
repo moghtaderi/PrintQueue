@@ -67,7 +67,13 @@ double printer::getPrintCost(void){
 	return totalInkCost;
 }
 
+
+int printer::getPagesPrinted(void){
+	return totalInkCost/printCost;
+}
+
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage, int maintenanceTime) {
+
 	int remainingPages, wholePages;
 
 	if(printerOnline) {
@@ -234,6 +240,8 @@ void printerList::listFreePrinters(std::ostream& outStream) {
 void printerList::completionReport(std::ostream& outStream) {
 	for (int i = 0; i < numberOfPrinters; i++) {
 		outStream << "    Printer " << printers[i].getPrinterID() << " successfully completed " << printers[i].getCompletedJobs() << " print jobs!\n";
+		outStream << "    Printer " << printers[i].getPrinterID() << " Used $" << printers[i].getPrintCost() << " of ink to complete the jobs. \n";
+		outStream << "    Printer " << printers[i].getPrinterID() << " successfully printed " << printers[i].getPagesPrinted() << " pages. \n";
 	}
 }
 

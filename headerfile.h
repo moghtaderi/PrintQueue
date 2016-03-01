@@ -83,6 +83,9 @@ public:
 
 	void setMaintenanceThreshold(int mt);
 
+	int getPagesPrinted(void);
+
+
 	//getPrinterID
 	//Function that returns the printer number
 	//Pre-condition: none
