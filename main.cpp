@@ -610,10 +610,6 @@ void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
 	cout << "    Total waiting time of all printed jobs: " << totalWaitingTime << " Minutes\n";
 	cout << "    Average wait time of all printed jobs: " << totalWaitingTime/(double)(printers->getCompletedJobsCount()) << " minutes\n";
 	cout << "    Average printing speed per page: " << totalPagesPrinted/(double)tick << " pages/minues\n";
-	// cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
-	// cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
-	// cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";
-	// cout << "    Jobs still waiting in the queue: " << scheduler->getLeftoverJobCount() << "\n";
 
 	cout << "\n\x1b[1m••••••••••••••••••••••••••••••••••••••••••••••••••••••\x1b[0m\n";
 }

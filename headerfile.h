@@ -238,7 +238,7 @@ public:
 	void calculateWaitingTimes(int*& waitTimesArray, int priorityCount);
 
 	int getLeftoverJobCount(int priorityCount);
-	
+
 	int getJobCountForQueueIndex(int index);
 
 private:
