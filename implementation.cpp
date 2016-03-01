@@ -18,7 +18,8 @@ int printJob::getPageCount(void) {
 
 int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printCost, double &totalInkCost){
 
-	int initialPageCount = pageCount;
+	int finalPageCount = pageCount;
+
 	totalPagesPrinted += wholePages;
 	pageCount -= wholePages;
 
@@ -26,8 +27,8 @@ int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printC
 		 pageCount = 0;
 	}
 
-	int printedPageCount = initialPageCount - pageCount;
-	totalInkCost += printedPageCount * printCost;
+	finalPageCount -= pageCount;
+	totalInkCost += finalPageCount * printCost;
 
 	return pageCount;
 }
