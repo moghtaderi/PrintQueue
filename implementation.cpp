@@ -90,7 +90,7 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 				partialPages += printSpeed;
 				wholePages = (int)partialPages;
 				remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
-				
+
 				partialPages -= wholePages;
 				maintenanceThresholdLeft -= wholePages;
 
@@ -132,7 +132,7 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 		}
 	}
 
-	
+
 }
 
 void printer::setMaintenanceThreshold(int mt){
@@ -253,8 +253,8 @@ void printerList::completionReport(std::ostream& outStream) {
 		totalCost += printers[i].getPrintCost();
 		totalPgsPrinted += printers[i].getPagesPrinted();
 	}
-	outStream << "\n" << "	Total Cost: \x1b[32m$" << totalCost << "\033[0m\n";
-	outStream << "	Total Pages Printed: " << totalPgsPrinted << " pages \n";
+	outStream << "\n" << "    Total Cost: \x1b[32m$" << totalCost << "\033[0m\n";
+	outStream << "    Total Pages Printed: " << totalPgsPrinted << " pages \n";
 }
 
 int printerList::getCompletedJobsCount(void){

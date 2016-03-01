@@ -2,104 +2,12 @@
 
 using namespace std;
 
-int randomFromRangeWithSeed(int min, int max){
-	int n = max - min + 1;
-   int remainder = RAND_MAX % n;
-   int x;
-   do{
-   	x = rand();
-   }while (x >= RAND_MAX - remainder);
-   return min + x % n;
-}
-
-int Factorial(int n) {
-	return (n == 1 || n == 0) ? 1 : Factorial(n - 1) * n;
-}
-
-void calculatePoissonDistribution(vector<double>& distribution, double avgNumPrintJobsPerMinute){
-
-	double total = 0.0;
-	int k = 0;
-	double newValue = 0.0;
-
-	while (total <= 0.95) {
-		newValue = (pow(avgNumPrintJobsPerMinute, k)*exp(-1*avgNumPrintJobsPerMinute))/Factorial(k);
-		k++;
-		total+=newValue;
-		distribution.push_back(total);
-	}
-}
-
-int numNewJobsToQueue(double random, vector<double> distribution){
-
-	int i = 0;
-	for (vector<double>::iterator it = distribution.begin(); it != distribution.end(); it++){
-		if(random <= *it){
-			return i;
-		}
-		i++;
-	}
-	return i;
-}
-
-int newJobPriorityLevel(double random, int priorityCount){
-	double total = 0.0;
-	int i;
-
-	if (priorityCount == 1) {
-		// uniform priority = All jobs are level 0
-		i = 1;
-
-	} else if (priorityCount == 2) {
-		// 50% - 50% distribution
-		if (random <= 0.5){
-			i = 1;
-		} else {
-			i = 2;
-		}
-
-	} else if (priorityCount == 3) {
-		// 30% - 30% - 30% distribution
-		if (random <= 1/3.0){
-			i = 1;
-		}else if (random <= 2/3.0){
-			i = 2;
-		} else {
-			i = 3;
-		}
-	} else {
-		// %33 - 25% - %20 ... distribution
-		for (i = 1; i < priorityCount; i++) {
-			total += 1.0/(double)(2+i);
-			if (random <= total) {
-				return i-1;
-			}
-		}
-	}
-
-	return i-1;
-}
-
-
-int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
-
-	int low, high;
-	int rand_catch;
-
-	if (cutoffIndex == 0){
-			low = 0;
-	} else {
-			low = priorityQueueCutOffs[cutoffIndex-1]+1;
-	}
-		high = priorityQueueCutOffs[cutoffIndex];
-
-	rand_catch = rand()%(high-low)+low;
-	if(rand_catch == 0){
-		return rand_catch+1;
-	}else
-		return rand_catch;
-
-}
+int Factorial(int n);
+int randomFromRangeWithSeed(int min, int max);
+void calculatePoissonDistribution(vector<double>& distribution, double avgNumPrintJobsPerMinute);
+int numNewJobsToQueue(double random, vector<double> distribution);
+int newJobPriorityLevel(double random, int priorityCount);
+int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount);
 
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages,
 	                          char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer,
@@ -113,9 +21,10 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs,
 	                           int maxPages, int seedValue, char userPrintSpeed,
-								double* printerSpeedArray, int priorityCount,
-		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage,
-		                       double* printerCostArray, int maintenanceThreshold);
+								      double* printerSpeedArray, int priorityCount,
+		                        int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute,
+										double costPerPage, double* printerCostArray, int maintenanceThreshold,
+									   int maintenanceTime);
 
 void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
 	                          int totalPagesPrinted, int tick);
@@ -191,7 +100,7 @@ int main(int argc, char const *argv[]) {
 	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages,
 		                      seedValue, userPrintSpeed, printerSpeedArray, priorityCount,
 		                       priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage,
-		                       printerCostArray, maintenanceThreshold);
+		                       printerCostArray, maintenanceThreshold, maintenanceTime);
 
 	// Setup Scheduler and Printers
 	printScheduler scheduler = printScheduler(priorityQueueCutOffs, priorityCount);
@@ -224,11 +133,11 @@ int main(int argc, char const *argv[]) {
 		int freePrinterCount = printers.getFreePrinterCount();
 
 		if (freePrinterCount > 0) {
-			cout << "    \x1b[34mThere are " << freePrinterCount << " available printers: ";
+			cout << "    There are " << freePrinterCount << " available printers: ";
 			printers.listFreePrinters(cout);
-			cout << "\x1b[0m" << endl;
+			cout << endl;
 		}else{
-			cout << "    \x1b[34;4mAll printers are currently busy!" << "\x1b[0m" << endl;
+			cout << "    All printers are currently busy!" << endl;
 		}
 
 		// process as many jobs as there are free printers
@@ -383,12 +292,12 @@ void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int
 	int next;
 
 	for (int i = 1; i < priorityCount; i++) {
-		cout << "Page cut-off for level " << i << ": ";
+		cout << "   Page cut-off for level " << i << ": ";
 		cin >> next;
 		while (!(next < maxPages) || !(previous < next)) {
 			cerr << "   ERROR: you must enter a value that is greater than " << previous;
 			cerr << " and less than " << maxPages << endl;
-			cout << "Page cut-off for level " << i << ": ";
+			cout << "   Page cut-off for level " << i << ": ";
 			cin >> next;
 		}
 		priorityQueueCutOffs[i-1] = next;
@@ -452,8 +361,107 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile){
 	}else{
 		seedValue = time(NULL);
 	}
-	
+
 	cout << endl;
+}
+
+int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
+
+	int low, high;
+	int rand_catch;
+
+	if (cutoffIndex == 0){
+			low = 0;
+	} else {
+			low = priorityQueueCutOffs[cutoffIndex-1]+1;
+	}
+		high = priorityQueueCutOffs[cutoffIndex];
+
+	rand_catch = rand()%(high-low)+low;
+	if(rand_catch == 0){
+		return rand_catch+1;
+	}else
+		return rand_catch;
+
+}
+
+void calculatePoissonDistribution(vector<double>& distribution, double avgNumPrintJobsPerMinute){
+
+	double total = 0.0;
+	int k = 0;
+	double newValue = 0.0;
+
+	while (total <= 0.95) {
+		newValue = (pow(avgNumPrintJobsPerMinute, k)*exp(-1*avgNumPrintJobsPerMinute))/Factorial(k);
+		k++;
+		total+=newValue;
+		distribution.push_back(total);
+	}
+}
+
+
+int newJobPriorityLevel(double random, int priorityCount){
+	double total = 0.0;
+	int i;
+
+	if (priorityCount == 1) {
+		// uniform priority = All jobs are level 0
+		i = 1;
+
+	} else if (priorityCount == 2) {
+		// 50% - 50% distribution
+		if (random <= 0.5){
+			i = 1;
+		} else {
+			i = 2;
+		}
+
+	} else if (priorityCount == 3) {
+		// 30% - 30% - 30% distribution
+		if (random <= 1/3.0){
+			i = 1;
+		}else if (random <= 2/3.0){
+			i = 2;
+		} else {
+			i = 3;
+		}
+	} else {
+		// %33 - 25% - %20 ... distribution
+		for (i = 1; i < priorityCount; i++) {
+			total += 1.0/(double)(2+i);
+			if (random <= total) {
+				return i-1;
+			}
+		}
+	}
+
+	return i-1;
+}
+
+int numNewJobsToQueue(double random, vector<double> distribution){
+
+	int i = 0;
+	for (vector<double>::iterator it = distribution.begin(); it != distribution.end(); it++){
+		if(random <= *it){
+			return i;
+		}
+		i++;
+	}
+	return i;
+}
+
+int randomFromRangeWithSeed(int min, int max){
+	int n = max - min + 1;
+   int remainder = RAND_MAX % n;
+   int x;
+   do{
+   	x = rand();
+   }while (x >= RAND_MAX - remainder);
+   return min + x % n;
+}
+
+int Factorial(int n) {
+	return (n == 1 || n == 0) ? 1 : Factorial(n - 1) * n;
 }
 
 void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& outStream,
@@ -523,7 +531,7 @@ void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& ou
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages,
 							  int seedValue, char userPrintSpeed, double* printerSpeedArray, int priorityCount,
 		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage,
-		                       double* printerCostArray, int maintenanceThreshold){
+		                       double* printerCostArray, int maintenanceThreshold, int maintenanceTime){
 
 	cout << "\n\x1b[1m••••••••••••••••• BEGIN SIMULATION •••••••••••••••••\x1b[0m\n";
 	cout << "   Printers Available: " << printerCount << "\n";
@@ -538,13 +546,14 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 	cout << "   Seed Value: " << seedValue << "\n";
 	cout << "   Number of Priority levels: " << priorityCount << "\n";
 	for(int i=0; i<priorityCount; i++){
-		cout << "   Priority Queue " << i+1 << " Cutoff: " << priorityQueueCutOffs[i] << "\n";
+		cout << "     Priority Queue " << i+1 << " Cutoff: " << priorityQueueCutOffs[i] << "\n";
 	}
 	cout << "   Average Number of Jobs per Minute: " << avgNumPrintJobsPerMinute << "\n";
 	for(int i=0; i<printerCount; i++){
-		cout << "   Printer " << i+1 << " Cost per page:" << printerCostArray[i] << "\n";
+		cout << "     Printer " << i+1 << " Cost per page:" << printerCostArray[i] << "\n";
 	}
 	cout << "   Printers require maintenance after: " << maintenanceThreshold << " Pages \n";
+	cout << "   Printer maintenance takes: " << maintenanceTime << " Minutes \n";
 
 
 }
@@ -555,7 +564,7 @@ void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
 	cout << "\n\x1b[1m••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\x1b[0m\n\n";
 	printers->completionReport(cout);
 
-	cout << "    	Total simulation time: " << tick << " minutes\n\n";
+	cout << "    Total simulation time: " << tick << " minutes\n";
 	// int freePrinterCount = printers->getFreePrinterCount();
 	// if (freePrinterCount != 0) {
 	// 	cout << "    Printer(s) ";
@@ -565,7 +574,7 @@ void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
 	// 	cout << "    All printers were busy at the end of simulation!\n";
 	// }
 
-	cout << "    Total waiting time in the queue: " << " minutes\n";
+	//cout << "    Total waiting time in the queue: " << " minutes\n";
 	// cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
 	// cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
 	// cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";
