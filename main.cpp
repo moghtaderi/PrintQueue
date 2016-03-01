@@ -39,7 +39,7 @@ void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& ou
 void getPrintCost(char& userPrintCost, double costPerPage, int printerCount,
 	               double*& printerCostArray, bool userInputFromFile);
 
-void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages);
+void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages, bool userInputFromFile);
 
 
 int main(int argc, char const *argv[]) {
@@ -263,7 +263,7 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 
 	getPrintSpeed(userPrintSpeed, printerSpeed, printerCount, printerSpeedArray, userInputFromFile);
 	getPrintCost(userPrintCost, costPerPage, printerCount, printerCostArray, userInputFromFile);
-	getPriorityQueueDetails(priorityCount, priorityQueueCutOffs, maxPages);
+	getPriorityQueueDetails(priorityCount, priorityQueueCutOffs, maxPages, userInputFromFile);
 	getSeedRef(userSeed, seedValue, userInputFromFile);
 
 	cout.rdbuf(currentBuffer);
@@ -281,13 +281,16 @@ void getPrintCost(char& userPrintCost, double costPerPage, int printerCount, dou
 	double tmpPrinterCost;
 
 	if (userPrintCost == 'n' || userPrintCost == 'N') {
-		cout << endl << "Please enter the cost per printed page for each printer (decimals allowed): " << endl;
+		if (!userInputFromFile)
+			cout << endl << "Please enter the cost per printed page for each printer (decimals allowed): " << endl;
 		for (int i=0; i < printerCount; i++) {
-			cout << "   Printer " << i+1 << " cost per page: ";
+			if (!userInputFromFile)
+				cout << "   Printer " << i+1 << " cost per page: ";
 			cin >> tmpPrinterCost;
 			while (!(tmpPrinterCost > 0)) {
 				cerr << "ERROR: printer must print a positive cost per printed page!" << endl;
-				cout << "   Printer " << i+1 << " cost per page: ";
+				if (!userInputFromFile)
+					cout << "   Printer " << i+1 << " cost per page: ";
 				cin >> tmpPrinterCost;
 			}
 			printerCostArray[i] = tmpPrinterCost;
@@ -301,12 +304,14 @@ void getPrintCost(char& userPrintCost, double costPerPage, int printerCount, dou
 }
 
 
-void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages) {
-	cout << endl << "How many priority levels do you have: ";
+void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int maxPages, bool userInputFromFile) {
+	if (!userInputFromFile)
+		cout << endl << "How many priority levels do you have: ";
 	cin >> priorityCount;
 	while (priorityCount < 1) {
 		cerr << "   ERROR: must have at least one priority level!" << endl;
-		cout << "How many priority levels do you have: ";
+		if (!userInputFromFile)
+			cout << "How many priority levels do you have: ";
 		cin >> priorityCount;
 	}
 
@@ -315,19 +320,22 @@ void getPriorityQueueDetails(int& priorityCount, int*& priorityQueueCutOffs, int
 	int next;
 
 	for (int i = 1; i < priorityCount; i++) {
-		cout << "   Page cut-off for level " << i << ": ";
+		if (!userInputFromFile)
+			cout << "   Page cut-off for level " << i << ": ";
 		cin >> next;
 		while (!(next < maxPages) || !(previous < next)) {
 			cerr << "   ERROR: you must enter a value that is greater than " << previous;
 			cerr << " and less than " << maxPages << endl;
-			cout << "   Page cut-off for level " << i << ": ";
+			if (!userInputFromFile)
+				cout << "   Page cut-off for level " << i << ": ";
 			cin >> next;
 		}
 		priorityQueueCutOffs[i-1] = next;
 		previous = next;
 	}
 	priorityQueueCutOffs[priorityCount-1] = maxPages;
-	cout << endl;
+	if (!userInputFromFile)
+		cout << endl;
 }
 
 /*
@@ -346,18 +354,22 @@ void getPrintSpeed(char& userPrintSpeed, int printerSpeed, int& printerCount, do
 	double tmpPrinterSpeed;
 
 	if (userPrintSpeed == 'n' || userPrintSpeed == 'N') {
-		cout << endl << "Please enter the print speed for each printer (decimals allowed): " << endl;
+		if (!userInputFromFile)
+			cout << endl << "Please enter the print speed for each printer (decimals allowed): " << endl;
 		for (int i=0; i < printerCount; i++) {
-			cout << "   Printer " << i+1 << " speed: ";
+			if (!userInputFromFile)
+				cout << "   Printer " << i+1 << " speed: ";
 			cin >> tmpPrinterSpeed;
 			while (!(tmpPrinterSpeed > 0)) {
 				cerr << "ERROR: printer must print a positive number of pages per minute!" << endl;
-				cout << "   Printer " << i+1 << " speed: ";
+				if (!userInputFromFile)
+					cout << "   Printer " << i+1 << " speed: ";
 				cin >> tmpPrinterSpeed;
 			}
 			printerSpeedArray[i] = tmpPrinterSpeed;
 		}
-		cout << endl;
+		if (!userInputFromFile)
+			cout << endl;
 	} else {
 		for (int i = 0; i < printerCount; i++) {
 			printerSpeedArray[i] = (double)printerSpeed;
@@ -380,12 +392,13 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile){
 		if (!userInputFromFile)
 			cout << endl << "Please enter your desired seed value: ";
 		cin >> seedValue;
-		cout << endl;
+		if (!userInputFromFile)
+			cout << endl;
 	}else{
 		seedValue = time(NULL);
 	}
-
-	cout << endl;
+	if (!userInputFromFile)
+		cout << endl;
 }
 
 int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
