@@ -100,7 +100,7 @@ public:
 
 
 	void setPrinterOnline(void);
-	
+
 	void setPrinterOffline(int maintenanceTime);
 
 private:
@@ -235,13 +235,12 @@ public:
 	//Post-condition: outputs the jobs taken from different priority queues
 	void processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount);
 
-	void calculateWaitingTimes(int& high, int& med, int& low);
-	int getLeftoverJobCount(void);
+	void calculateWaitingTimes(int*& waitTimesArray, int priorityCount);
+
+	int getLeftoverJobCount(int priorityCount);
+	
+	int getJobCountForQueueIndex(int index);
 
 private:
-	printJobWaitingQueue highPriority;
-	printJobWaitingQueue mediumPriority;
-	printJobWaitingQueue lowPriority;
-
 	printJobWaitingQueue* queueArray;
 };

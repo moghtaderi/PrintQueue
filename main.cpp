@@ -27,7 +27,7 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 									   int maintenanceTime);
 
 void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
-	                          int totalPagesPrinted, int tick);
+	                          int totalPagesPrinted, int tick, int priorityCount, int* waitTimesArray);
 
 void getPrintSpeed(char& userPrintSpeed, int printerSpeed, int& printerCount,
 	                double*& printerSpeedArray, bool userInputFromFile);
@@ -78,6 +78,7 @@ int main(int argc, char const *argv[]) {
 	int jamTime = 2;
 	double jamPrecentage = .05;
 	vector<double> distribution;
+	int* waitTimesArray;
 
 	// choose between file vs. standard input and output paths
 	setupIO(userInput, userOutput, infile, outfile, cinBuffer, coutBuffer, userInputFromFile, userOutputToFile);
@@ -109,10 +110,16 @@ int main(int argc, char const *argv[]) {
 	printers.setPrintingCost(printerCostArray);
 	printers.setPrintingMaintenanceThreshold(maintenanceThreshold);
 
+	// Initialize the waiting time array
+	waitTimesArray = new int[priorityCount];
+	for (int i = 0; i < priorityCount; i++) {
+		waitTimesArray[i] = 0;
+	}
+
 	// Main loop
 	while (numFinishedJobs != numPrintJobs){
 
-		cout << endl << "Minute " << tick << ":" << endl;
+		cout << endl << "-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-( Minute " << tick << " )-.-.-.-" << endl;
 
 		//find out how many new jobs to add based on our poisson distribution
 		int numNewJobs = numNewJobsToQueue((rand()%RAND_MAX)/(double)RAND_MAX, distribution);
@@ -146,8 +153,24 @@ int main(int argc, char const *argv[]) {
 		// let all the printers progress for one minute
 		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray, jamTime, jamPrecentage, maintenanceTime);
 
+		cout << "    ============ Queue Status ============\n";
+
 		// keep track of all the wait times based on the queues
-		//scheduler.calculateWaitingTimes();
+		scheduler.calculateWaitingTimes(waitTimesArray, priorityCount);
+
+
+		int leftoverJobs = scheduler.getLeftoverJobCount(priorityCount);
+		if(!leftoverJobs){
+			cout << "      No Jobs currently waiting in queue!\n";
+		}else{
+			cout << "     Jobs still waiting in the queue: " << leftoverJobs << "\n";
+			// show waiting times
+			for (int i = 0; i < priorityCount; i++) {
+				//cout << "    Level " << i+1 << " total waiting time: " << waitTimesArray[i] << " Minutes\n";
+				cout << "          Jobs in queue level "<< i+1 << ": " << scheduler.getJobCountForQueueIndex(i) << "\n";
+			}
+		}
+		cout << "    ======================================\n";
 
 		// keep track of the jobs that are done!
 		numFinishedJobs = printers.getCompletedJobsCount();
@@ -155,7 +178,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 
-	outputSimulationSummary(&printers, &scheduler, totalPagesPrinted, tick);
+	outputSimulationSummary(&printers, &scheduler, totalPagesPrinted, tick, priorityCount, waitTimesArray);
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
@@ -559,22 +582,21 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 }
 
 void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
-	                          int totalPagesPrinted, int tick){
+	                          int totalPagesPrinted, int tick, int priorityCount, int* waitTimesArray){
 
 	cout << "\n\x1b[1m••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\x1b[0m\n\n";
 	printers->completionReport(cout);
 
 	cout << "    Total simulation time: " << tick << " minutes\n";
-	// int freePrinterCount = printers->getFreePrinterCount();
-	// if (freePrinterCount != 0) {
-	// 	cout << "    Printer(s) ";
-	// 	printers->listFreePrinters(cout);
-	// 	cout << "were free at the end of simulation!\n";
-	// } else {
-	// 	cout << "    All printers were busy at the end of simulation!\n";
-	// }
 
-	//cout << "    Total waiting time in the queue: " << " minutes\n";
+	int totalWaitingTime = 0;
+	for (int i = 0; i < priorityCount; i++) {
+		cout << "       Priority level " << i+1 << " waiting time: " << waitTimesArray[i] << " minutes\n";
+		totalWaitingTime += waitTimesArray[i];
+	}
+	cout << "    Total waiting time of all printed jobs: " << totalWaitingTime << " Minutes\n";
+	cout << "    Average wait time of all printed jobs: " << totalWaitingTime/(double)(printers->getCompletedJobsCount()) << " minutes\n";
+	cout << "    Average printing speed per page: " << totalPagesPrinted/(double)tick << " pages/minues\n";
 	// cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
 	// cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
 	// cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";

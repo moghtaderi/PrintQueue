@@ -112,7 +112,7 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 				}
 
 			}else{
-					outStream << "      \x1b[31m*** Printer " << printerID << " is jammed for " << jamTimeLeft << " more minutes ***\x1b[0m\n";
+					outStream << "      \x1b[31m  *** Printer " << printerID << " is JAMMED! ***\n       Fix time remaining: " << jamTimeLeft << " minutes\x1b[0m\n";
 			}
 		}
 
@@ -122,7 +122,7 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 		}
 
 	}else{
-		outStream << "      \x1b[33m### Printer " << printerID << " is OFFLINE for " << maintenanceTimeLeft << " more minutes ### \x1b[0m\n";
+		outStream << "      \x1b[33m ### Printer " << printerID << " is OFFLINE! ###\n         Back online in: " << maintenanceTimeLeft << " minutes\x1b[0m\n";
 		maintenanceTimeLeft--;
 		if (maintenanceTimeLeft <= 0) {
 			maintenanceTimeLeft = 0;
@@ -212,7 +212,6 @@ void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrin
 		// printerSpeedArray[i] -= wholePages;
 		printers[i].progressOneMinute(outStream, totalPagesPrinted, jamTime, jamPrecentage, maintenanceTime);
 	}
-	outStream << "    ======================================\n";
 }
 
 int printerList::getFreePrinterCount(void) {
@@ -234,7 +233,7 @@ void printerList::assignNewJob(printJob &npj, std::ostream& outStream) {
 	} while(!printers[i].isFree());
 
 	printers[i].setJob(npj);
-	outStream << ": got assigned to printer " << printers[i].getPrinterID() << "\n";
+	outStream << " - got assigned to printer " << printers[i].getPrinterID() << "\n";
 }
 
 void printerList::listFreePrinters(std::ostream& outStream) {
@@ -246,15 +245,15 @@ void printerList::listFreePrinters(std::ostream& outStream) {
 
 void printerList::completionReport(std::ostream& outStream) {
 	double totalCost = 0.00;
-	int totalPgsPrinted = 0;
+	int totalPagsPrinted = 0;
 	for (int i = 0; i < numberOfPrinters; i++) {
 		outStream << "    Printer " << printers[i].getPrinterID() << " successfully completed " << printers[i].getCompletedJobs() << " print jobs!\n";
 		outStream << "      These jobs used \x1b[32m$" << printers[i].getPrintCost() << "\x1b[0m ink and "<< printers[i].getPagesPrinted() << " pieces of paper\n";
 		totalCost += printers[i].getPrintCost();
-		totalPgsPrinted += printers[i].getPagesPrinted();
+		totalPagsPrinted += printers[i].getPagesPrinted();
 	}
 	outStream << "\n" << "    Total Cost: \x1b[32m$" << totalCost << "\033[0m\n";
-	outStream << "    Total Pages Printed: " << totalPgsPrinted << " pages \n";
+	outStream << "    Total Pages Printed: " << totalPagsPrinted << " pages \n";
 }
 
 int printerList::getCompletedJobsCount(void){
@@ -302,8 +301,8 @@ void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream,
 	int pageCount = npj->getPageCount();
 
 	queueArray[cutoffIndex].push(npj);
-	outStream << "    \x1b[36mNew " << pageCount << " page job with ID: " << npj->getJobID();
-	outStream << " got assigned to priority queue level: " << cutoffIndex << "\x1b[0m\n";
+	outStream << "    \x1b[36mNew " << pageCount << " page job with ID " << npj->getJobID();
+	outStream << " - got assigned to priority queue level: " << cutoffIndex+1 << "\x1b[0m\n";
 }
 
 void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount) {
@@ -320,7 +319,7 @@ void printScheduler::processJobs(int attempts, printerList& plist, std::ostream&
 			if(!queueArray[priorityLevel].isEmpty()){
 				newJob = queueArray[priorityLevel].front();
 				queueArray[priorityLevel].pop();
-				outStream << "    \x1b[35mJob " << newJob->getJobID() << " Taken from priority queue level " << priorityLevel;
+				outStream << "    \x1b[35mJob " << newJob->getJobID() << " Taken from priority queue level " << priorityLevel+1;
 				plist.assignNewJob(*newJob, outStream);
 				outStream << "\x1b[0m";
 				assignedOneJob = true;
@@ -334,12 +333,23 @@ void printScheduler::processJobs(int attempts, printerList& plist, std::ostream&
 	}
 }
 
-void printScheduler::calculateWaitingTimes(int& high, int& med, int& low) {
-	high += highPriority.size();
-	med += mediumPriority.size();
-	low += lowPriority.size();
+void printScheduler::calculateWaitingTimes(int*& waitTimesArray, int priorityCount) {
+
+	for (int i = 0; i < priorityCount; i++) {
+		waitTimesArray[i]+=queueArray[i].size();
+	}
 }
 
-int printScheduler::getLeftoverJobCount(void) {
-	return highPriority.size()+mediumPriority.size()+lowPriority.size();
+int printScheduler::getLeftoverJobCount(int priorityCount) {
+
+	int total = 0;
+	for (int i = 0; i < priorityCount; i++) {
+		total += queueArray[i].size();
+	}
+
+	return total;
+}
+
+int printScheduler::getJobCountForQueueIndex(int index) {
+	return queueArray[index].size();
 }
