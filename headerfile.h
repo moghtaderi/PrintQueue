@@ -54,7 +54,7 @@ public:
 	//Function to tell you how many pages are left
 	//Pre-Condition: none
 	//Post-Condition: increments with the number of pages left
-	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPercentage);
 
 	//isFree
 	//Function that returns the status of the printer
@@ -78,6 +78,11 @@ public:
 	void setPrintCost(double pc);
 
 	double getPrintCost(void);
+
+	int getisPrinterJammed(void);
+
+	void setJamTimeLeft(int min);
+
 
 	void setMaintenanceThreshold(int mt);
 
@@ -108,6 +113,7 @@ private:
 	int maintenanceThreshold;
 	bool printerOnline;
 	double totalInkCost;
+	int jamTimeLeft;
 
 	//setPrinterBusy
 	//Function to set the printer to busy
@@ -136,7 +142,7 @@ public:
 	//Function to increase the progress of each printer each minute
 	//Pre-condition: none
 	//Post-condition: increments the progress of each printer in the queue
-	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPercentage);
 
 	//getFreePrinterCount
 	//Function that returns the number of free printers
@@ -157,6 +163,9 @@ public:
 	void setPrintingCost(double* PCA);
 
 	void setPrintingMaintenanceThreshold(int MT);
+
+
+	void setPrinterJamRate(int min);
 
 	//listFreePrinters
 	//Function to output a list of free printers

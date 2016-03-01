@@ -101,14 +101,13 @@ int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCoun
 
 }
 
-void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
-                             int &maxPages, char &userPrintSpeed, double*& printerSpeedArray,
-									  streambuf* coutBuffer, char &userSeed, int &seedValue,
-									  bool userInputFromFile, bool userOutputToFile,
-									  int& priorityCount, int*& priorityQueueCutOffs,
-									  double& avgNumPrintJobsPerMinute, double& costPerPage,
-									  char& userPrintCost, double*& printerCostArray,
-									  int& maintenanceThreshold, int& maintenanceTime);
+void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs, int &maxPages,
+	                          char &userPrintSpeed, double*& printerSpeedArray, streambuf* coutBuffer,
+									  char &userSeed, int &seedValue, bool userInputFromFile,
+									  bool userOutputToFile, int& priorityCount, int*& priorityQueueCutOffs,
+									  double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost,
+									  double*& printerCostArray, int& maintenanceThreshold, int& maintenanceTime,
+									  int &jamTime, double &jamPrecentage);
 
 void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 
@@ -167,6 +166,8 @@ int main(int argc, char const *argv[]) {
 	int* priorityQueueCutOffs = NULL;
 	int maintenanceThreshold = 500;
 	int maintenanceTime = 10;
+	int jamTime = 2;
+	double jamPrecentage = .05;
 	vector<double> distribution;
 
 	// choose between file vs. standard input and output paths
@@ -178,7 +179,7 @@ int main(int argc, char const *argv[]) {
 									seedValue, userInputFromFile, userOutputToFile, priorityCount,
 									priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage,
 									userPrintCost, printerCostArray, maintenanceThreshold,
-									maintenanceTime);
+									maintenanceTime, jamTime, jamPrecentage);
 
 	// setup distribution vector
 	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
@@ -234,7 +235,7 @@ int main(int argc, char const *argv[]) {
 		scheduler.processJobs(freePrinterCount, printers, cout, priorityCount);
 
 		// let all the printers progress for one minute
-		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray);
+		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray, jamTime, jamPrecentage);
 
 		// keep track of all the wait times based on the queues
 		//scheduler.calculateWaitingTimes();
@@ -267,7 +268,8 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 									  char &userSeed, int &seedValue, bool userInputFromFile,
 									  bool userOutputToFile, int& priorityCount, int*& priorityQueueCutOffs,
 									  double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost,
-									  double*& printerCostArray, int& maintenanceThreshold, int& maintenanceTime){
+									  double*& printerCostArray, int& maintenanceThreshold, int& maintenanceTime,
+									  int &jamTime, double &jamPrecentage){
 
 	char userDefaults;
 	streambuf* currentBuffer = cout.rdbuf();
@@ -284,6 +286,8 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		cout << "Cost per printed page (USD): " << costPerPage << endl;
 		cout << "Number of printed pages before requiring maintenance: " << maintenanceThreshold << endl;
 		cout << "Time needed to perform the maintenance: " << maintenanceTime << endl;
+		cout << "Time needed to clear jam: " << jamTime << endl;
+		cout << "Precentage that a job will Jam: " << jamPrecentage << endl;
 		cout << endl << "Would you like to use the above default values [Y/N]: ";
 	}
 	cin >> userDefaults;
@@ -312,6 +316,14 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		if (!userInputFromFile)
 			cout << "Maintenance break time in minutes -------- ";
 		cin >> maintenanceTime;
+
+		if (!userInputFromFile)
+			cout << "Time Required to clear a paper jam in minutes -------- ";
+		cin >> jamTime;
+
+		if (!userInputFromFile)
+			cout << "Precentage of times the printer will jam in decimal form -------- ";
+		cin >> jamPrecentage;
 
 		cout << endl;
 	}
