@@ -69,33 +69,24 @@ double printer::getPrintCost(void){
 
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage) {
 	int remainingPages, wholePages;
-	double jamCheck;
 
 	if (printerBusy) {
 
-		jamCheck = (rand()%1000)/1000.0;
-		if (jamCheck <= jamPrecentage) {
+		if ((rand()%1000)/1000.0 <= jamPrecentage)
 			jamTimeLeft = jamTime;
-		}
-		
-		if(jamTimeLeft == 0){
+
 		//check if jammed
+		if(jamTimeLeft == 0){
 
 			partialPages += printSpeed;
 			wholePages = (int)partialPages;
-			
-			std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
-
 			remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
-
 			partialPages -= wholePages;
 
-			std::cerr << printerID << " : whole pages: "<< wholePages << " total cost: " << totalInkCost << "\n";
-
 			if (remainingPages != 0) {
-				outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";
+				outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n      [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 			}else{
-				outStream << "      Printer " << printerID << " has finished printing!\n";
+				outStream << "      Printer " << printerID << " has finished printing! \n      [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 				completedJobs++;
 				setPrinterFree();
 			}
