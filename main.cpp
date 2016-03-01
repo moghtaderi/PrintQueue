@@ -58,6 +58,7 @@ int newJobPriorityLevel(double random, int priorityCount){
 int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCount){
 
 	int low, high;
+	int rand_catch;
 
 	if (cutoffIndex == 0){
 			low = 0;
@@ -66,7 +67,12 @@ int newJobPageCount(int cutoffIndex, int* priorityQueueCutOffs, int priorityCoun
 	}
 		high = priorityQueueCutOffs[cutoffIndex];
 
-	return rand()%(high-low)+low;
+	rand_catch = rand()%(high-low)+low;
+	if(rand_catch == 0){
+		return rand_catch+1;
+	}else
+		return rand_catch;
+
 }
 
 void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrintJobs,
@@ -82,7 +88,9 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs,
 	                           int maxPages, int seedValue, char userPrintSpeed,
-										double* printerSpeedArray);
+								double* printerSpeedArray, int priorityCount,
+		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage, 
+		                       double* printerCostArray, int maintenanceThreshold);
 
 void outputSimulationSummary(printerList* printers, int high, int med, int low,
 	                        printScheduler* scheduler, int totalPagesPrinted, int tick);
@@ -155,7 +163,9 @@ int main(int argc, char const *argv[]) {
 
 	// Output the settings for the simulation to confirm
 	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages,
-		                      seedValue, userPrintSpeed, printerSpeedArray);
+		                      seedValue, userPrintSpeed, printerSpeedArray, priorityCount,
+		                       priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage, 
+		                       printerCostArray, maintenanceThreshold);
 
 	// Setup Scheduler and Printers
 	printScheduler scheduler = printScheduler(priorityQueueCutOffs, priorityCount);
@@ -465,8 +475,10 @@ void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& ou
 	}
 }
 
-void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages,
-	                           int seedValue, char userPrintSpeed, double *printerSpeedArray){
+void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, 
+							  int seedValue, char userPrintSpeed, double* printerSpeedArray, int priorityCount,
+		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage, 
+		                       double* printerCostArray, int maintenanceThreshold){
 
 	cout << "\n••••••••••••••••• BEGIN SIMULATION •••••••••••••••••\n";
 	cout << "   Printers Available: " << printerCount << "\n";
@@ -479,6 +491,18 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 	cout << "   Number of print jobs: " << numPrintJobs << "\n";
 	cout << "   Maximum possible page count: " << maxPages << "\n";
 	cout << "   Seed Value: " << seedValue << "\n";
+	cout << "   Number of Priority levels: " << priorityCount << "\n";
+	for(int i=0; i<priorityCount; i++){
+		cout << "   Priority Queue " << i+1 << " Cutoff: " << priorityQueueCutOffs[i] << "\n";
+	}
+	cout << "   Average Number of Jobs per Minute: " << avgNumPrintJobsPerMinute << "\n";
+	cout << "   Cost Per Page: " << costPerPage << "\n";
+	for(int i=0; i<printerCount; i++){
+		cout << "   Printer " << i+1 << " Cost :" << printerCostArray[i] << "\n";
+	}
+	cout << "   Printers require maintenance after: " << maintenanceThreshold << " Pages \n";
+	
+
 }
 
 void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler,
