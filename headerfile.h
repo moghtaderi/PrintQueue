@@ -81,11 +81,6 @@ public:
 
 	double getPrintCost(void);
 
-	int getisPrinterJammed(void);
-
-	void setJamTimeLeft(int min);
-
-
 	void setMaintenanceThreshold(int mt);
 
 	//getPrinterID

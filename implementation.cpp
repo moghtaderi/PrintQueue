@@ -47,7 +47,7 @@ printer::printer() {
 	partialPages = 0.0;
 	printerOnline = true;
 	totalInkCost = 0.0;
-	jamTimeLeft = 2;
+	jamTimeLeft = 0;
 }
 
 void printer::setJob(printJob &newJob) {
@@ -84,9 +84,9 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 			partialPages -= wholePages;
 
 			if (remainingPages != 0) {
-				outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n      [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
+				outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 			}else{
-				outStream << "      Printer " << printerID << " has finished printing! \n      [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
+				outStream << "      Printer " << printerID << " has finished printing! \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 				completedJobs++;
 				setPrinterFree();
 			}
@@ -105,14 +105,6 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 
 void printer::setMaintenanceThreshold(int mt){
 	maintenanceThreshold = mt;
-}
-
-void printer::setJamTimeLeft(int min){
-	jamTimeLeft = min;
-}
-
-int printer::getisPrinterJammed(void){
-	return jamTimeLeft;
 }
 
 bool printer::isFree(void){
@@ -170,11 +162,11 @@ void printerList::setPrintingMaintenanceThreshold(int MT){
 	}
 }
 
-void printerList::setPrinterJamRate(int min){
-	for(int i = 0;i < numberOfPrinters; i++){
-		printers[i].setJamTimeLeft(min);
-	}
-}
+// void printerList::setPrinterJamRate(int min){
+// 	for(int i = 0;i < numberOfPrinters; i++){
+// 		printers[i].setJamTimeLeft(min);
+// 	}
+// }
 
 void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPrecentage) {
 	int wholePages = 0;
