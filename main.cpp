@@ -439,6 +439,8 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile){
 	}else{
 		seedValue = time(NULL);
 	}
+	
+	cout << endl;
 }
 
 void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& outStream,

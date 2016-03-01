@@ -18,7 +18,8 @@ int printJob::getPageCount(void) {
 
 int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printCost, double &totalInkCost){
 
-	int initialPageCount = pageCount;
+	int finalPageCount = pageCount;
+
 	totalPagesPrinted += wholePages;
 	pageCount -= wholePages;
 
@@ -26,8 +27,8 @@ int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printC
 		 pageCount = 0;
 	}
 
-	int printedPageCount = initialPageCount - pageCount;
-	totalInkCost += printedPageCount * printCost;
+	finalPageCount -= pageCount;
+	totalInkCost += finalPageCount * printCost;
 
 	return pageCount;
 }
@@ -73,18 +74,17 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted)
 		partialPages += printSpeed;
 		wholePages = (int)partialPages;
 		
-		std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
+//		std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
 
 		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
-
 		partialPages -= wholePages;
 
-		std::cerr << printerID << " : whole pages: "<< wholePages << " total cost: " << totalInkCost << "\n";
+//		std::cerr << printerID << " : whole pages: "<< wholePages << " total cost: " << totalInkCost << "\n";
 
 		if (remainingPages != 0) {
-			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";
+			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages. \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 		}else{
-			outStream << "      Printer " << printerID << " has finished printing!\n";
+			outStream << "      Printer " << printerID << " has finished printing! \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 			completedJobs++;
 			setPrinterFree();
 		}
