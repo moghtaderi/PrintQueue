@@ -76,7 +76,7 @@ int newJobPriorityLevel(double random, int priorityCount){
 			}
 		}
 	}
-	
+
 	return i-1;
 }
 
@@ -115,11 +115,11 @@ void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs,
 	                           int maxPages, int seedValue, char userPrintSpeed,
 								double* printerSpeedArray, int priorityCount,
-		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage, 
+		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage,
 		                       double* printerCostArray, int maintenanceThreshold);
 
-void outputSimulationSummary(printerList* printers, int high, int med, int low,
-	                        printScheduler* scheduler, int totalPagesPrinted, int tick);
+void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
+	                          int totalPagesPrinted, int tick);
 
 void getPrintSpeed(char& userPrintSpeed, int printerSpeed, int& printerCount,
 	                double*& printerSpeedArray, bool userInputFromFile);
@@ -153,9 +153,6 @@ int main(int argc, char const *argv[]) {
 	ifstream infile;
 	streambuf* coutBuffer;
 	streambuf* cinBuffer;
-	int hwt = 0;
-	int mwt = 0;
-	int lwt = 0;
 	int totalPagesPrinted = 0;
 	bool userInputFromFile = false;
 	bool userOutputToFile = false;
@@ -192,7 +189,7 @@ int main(int argc, char const *argv[]) {
 	// Output the settings for the simulation to confirm
 	outputSimulationSettings(printerCount, printerSpeed, numPrintJobs, maxPages,
 		                      seedValue, userPrintSpeed, printerSpeedArray, priorityCount,
-		                       priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage, 
+		                       priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage,
 		                       printerCostArray, maintenanceThreshold);
 
 	// Setup Scheduler and Printers
@@ -240,14 +237,14 @@ int main(int argc, char const *argv[]) {
 		printers.progressOneMinute(cout, totalPagesPrinted, printerSpeedArray);
 
 		// keep track of all the wait times based on the queues
-		scheduler.calculateWaitingTimes(hwt, mwt, lwt);
+		//scheduler.calculateWaitingTimes();
 
 		// keep track of the jobs that are done!
 		numFinishedJobs = printers.getCompletedJobsCount();
 		tick++;
 	}
 
-	outputSimulationSummary(&printers, hwt, mwt, lwt, &scheduler, totalPagesPrinted, tick);
+	outputSimulationSummary(&printers, &scheduler, totalPagesPrinted, tick);
 
 	cout << endl;
 	cout.rdbuf(coutBuffer);                 // reset cout buffer
@@ -508,9 +505,9 @@ void setupIO(char& userInput, char& userOutput, ifstream &inStream, ofstream& ou
 	}
 }
 
-void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages, 
+void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJobs, int maxPages,
 							  int seedValue, char userPrintSpeed, double* printerSpeedArray, int priorityCount,
-		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage, 
+		                       int* priorityQueueCutOffs, double avgNumPrintJobsPerMinute, double costPerPage,
 		                       double* printerCostArray, int maintenanceThreshold){
 
 	cout << "\n••••••••••••••••• BEGIN SIMULATION •••••••••••••••••\n";
@@ -534,11 +531,11 @@ void outputSimulationSettings(int printerCount, int printerSpeed, int numPrintJo
 		cout << "   Printer " << i+1 << " Cost :" << printerCostArray[i] << "\n";
 	}
 	cout << "   Printers require maintenance after: " << maintenanceThreshold << " Pages \n";
-	
+
 
 }
 
-void outputSimulationSummary(printerList* printers, int high, int med, int low, printScheduler* scheduler,
+void outputSimulationSummary(printerList* printers, printScheduler* scheduler,
 	                          int totalPagesPrinted, int tick){
 
 	cout << "\n••••••••••••••••• SIMULATION SUMMARY •••••••••••••••••\n\n";
@@ -556,10 +553,10 @@ void outputSimulationSummary(printerList* printers, int high, int med, int low, 
 	// }
 
 	cout << "    Total pages printed: " << totalPagesPrinted << " pages\n";
-	cout << "    Total waiting time in the queue: " << high+med+low << " minutes\n";
-	cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
-	cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
-	cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";
+	cout << "    Total waiting time in the queue: " << " minutes\n";
+	// cout << "        in HIGH PRIOROTY queue: " << high << " minutes\n";
+	// cout << "        in MEDIUM PRIOROTY queue: " << med << " minutes\n";
+	// cout << "        in LOW PRIOROTY queue: " << low << " minutes\n";
 	// cout << "    Jobs still waiting in the queue: " << scheduler->getLeftoverJobCount() << "\n";
 
 	cout << "\n••••••••••••••••••••••••••••••••••••••••••••••••••••••\n";
