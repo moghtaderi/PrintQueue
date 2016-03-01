@@ -56,7 +56,7 @@ public:
 	//Function to tell you how many pages are left
 	//Pre-Condition: none
 	//Post-Condition: increments with the number of pages left
-	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPercentage);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPercentage, int maintenanceTime);
 
 	//isFree
 	//Function that returns the status of the printer
@@ -100,7 +100,8 @@ public:
 
 
 	void setPrinterOnline(void);
-	void setPrinterOffline(void);
+	
+	void setPrinterOffline(int maintenanceTime);
 
 private:
 	int printerID;
@@ -111,6 +112,8 @@ private:
 	double partialPages;
 	double printCost;
 	int maintenanceThreshold;
+	int maintenanceThresholdLeft;
+	int maintenanceTimeLeft;
 	bool printerOnline;
 	double totalInkCost;
 	int jamTimeLeft;
@@ -142,7 +145,7 @@ public:
 	//Function to increase the progress of each printer each minute
 	//Pre-condition: none
 	//Post-condition: increments the progress of each printer in the queue
-	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPercentage);
+	void progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPercentage, int maintenanceTime);
 
 	//getFreePrinterCount
 	//Function that returns the number of free printers
@@ -223,14 +226,14 @@ public:
 	//npj: new print job
 	//Pre-condition: new print job, ostream
 	//Post-condition: schedules the jobs' priorities
-	void scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex, int* pPagesPrinted);
+	void scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex);
 
 	//processJobs
 	//Function to process the jobs based on priority
 	//attempts: the number of free printers
 	//Pre-condition: number of attempts to grab a free printer, list of printers, ostream
 	//Post-condition: outputs the jobs taken from different priority queues
-	void processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount, int* pNumJobs);
+	void processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount);
 
 	void calculateWaitingTimes(int& high, int& med, int& low);
 	int getLeftoverJobCount(void);
