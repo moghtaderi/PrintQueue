@@ -18,7 +18,8 @@ int printJob::getPageCount(void) {
 
 int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printCost, double &totalInkCost){
 
-	int initialPageCount = pageCount;
+	int finalPageCount = pageCount;
+
 	totalPagesPrinted += wholePages;
 	pageCount -= wholePages;
 
@@ -26,8 +27,8 @@ int printJob::printAtSpeed(int wholePages, int& totalPagesPrinted, double printC
 		 pageCount = 0;
 	}
 
-	int printedPageCount = initialPageCount - pageCount;
-	totalInkCost += printedPageCount * printCost;
+	finalPageCount -= pageCount;
+	totalInkCost += finalPageCount * printCost;
 
 	return pageCount;
 }
@@ -46,6 +47,7 @@ printer::printer() {
 	partialPages = 0.0;
 	printerOnline = true;
 	totalInkCost = 0.0;
+	jamTimeLeft = 0;
 }
 
 void printer::setJob(printJob &newJob) {
@@ -65,31 +67,47 @@ double printer::getPrintCost(void){
 	return totalInkCost;
 }
 
-void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted) {
+int printer::getPagesPrinted(void){
+	return totalInkCost/printCost;
+}
+
+void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage) {
 	int remainingPages, wholePages;
 
 	if (printerBusy) {
 
-		partialPages += printSpeed;
-		wholePages = (int)partialPages;
-		
-		std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
+		if ((rand()%1000)/1000.0 <= jamPrecentage)
+			jamTimeLeft = jamTime;
 
 		// std::cerr << "total pages printed : " << totalPagesPrinted << "\n";
 
 		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
 
-		partialPages -= wholePages;
+		//check if jammed
+		if(jamTimeLeft == 0){
 
-		std::cerr << printerID << " : whole pages: "<< wholePages << " total cost: " << totalInkCost << "\n";
+			partialPages += printSpeed;
+			wholePages = (int)partialPages;
+			remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
+			partialPages -= wholePages;
 
-		if (remainingPages != 0) {
-			outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages\n";
+			if (remainingPages != 0) {
+				outStream << "      \x1b[33mPrinter " << printerID << " has " << remainingPages << " remaining pages \x1b[0m\n       [cumulative ink cost: \x1b[32m$" << std::fixed << std::setprecision(2) << totalInkCost << "\033[0m]\n";
+			}else{
+				outStream << "      \x1b[34mPrinter " << printerID << " has finished printing! \x1b[0m\n       [cumulative ink cost: \x1b[32m$" << std::fixed << std::setprecision(2) << totalInkCost << "\033[0m]\n";
+				completedJobs++;
+				setPrinterFree();
+			}
+
 		}else{
-			outStream << "      Printer " << printerID << " has finished printing!\n";
-			completedJobs++;
-			setPrinterFree();
+				outStream << "      \x1b[31m*** Printer " << printerID << " is jammed for " << jamTimeLeft << " more minutes ***\x1b[0m\n";
 		}
+	}
+
+	//decrement counter
+	jamTimeLeft--;
+	if (jamTimeLeft < 0) {
+		jamTimeLeft = 0;
 	}
 }
 
@@ -152,7 +170,13 @@ void printerList::setPrintingMaintenanceThreshold(int MT){
 	}
 }
 
-void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA) {
+// void printerList::setPrinterJamRate(int min){
+// 	for(int i = 0;i < numberOfPrinters; i++){
+// 		printers[i].setJamTimeLeft(min);
+// 	}
+// }
+
+void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, double* PSA, int jamTime, double jamPrecentage) {
 	int wholePages = 0;
 	outStream << "    =========== Printer Status ===========\n";
 	for (int i = 0; i < numberOfPrinters; i++) {
@@ -160,7 +184,7 @@ void printerList::progressOneMinute(std::ostream& outStream, int& totalPagesPrin
 		// printerSpeedArray[i] += PSA[i];    // add printer speeds i.e. 0.7+0.7 = 1.4 - 1 = 0.4  ... 0.4+0.7 = 1.1 - 1 = 0.1 ...
 		// wholePages = (int)printerSpeedArray[i];
 		// printerSpeedArray[i] -= wholePages;
-		printers[i].progressOneMinute(outStream, totalPagesPrinted);
+		printers[i].progressOneMinute(outStream, totalPagesPrinted, jamTime, jamPrecentage);
 	}
 	outStream << "    ======================================\n";
 }
@@ -196,14 +220,20 @@ void printerList::listFreePrinters(std::ostream& outStream) {
 
 void printerList::completionReport(std::ostream& outStream) {
 	double totalCost = 0;
+	int totalPgsPrinted = 0;
 	for (int i = 0; i < numberOfPrinters; i++) {
 		outStream << "    Printer " << printers[i].getPrinterID() << ":\n" 
 				  << "	successfully completed " << printers[i].getCompletedJobs() << " print jobs.\n"
-				  // << "	successfully printed " << printers[i].getTotalPagesPrinted() << " pages! \n"
-				  << "	has a total print cost of $" << printers[i].getPrintCost() << ".\n";
+				  << "	successfully printed " << printers[i].getPagesPrinted() << " pages. \n"
+				  << "	Used \x1b[32m$" << printers[i].getPrintCost() << "\033[0m of ink to complete the jobs. \n";
 		totalCost += printers[i].getPrintCost();
+		totalPgsPrinted += printers[i].getPagesPrinted();
+		// outStream << "    Printer " << printers[i].getPrinterID() << " successfully completed " << printers[i].getCompletedJobs() << " print jobs!\n";
+		// outStream << "    Printer " << printers[i].getPrinterID() << " Used $" << printers[i].getPrintCost() << " of ink to complete the jobs. \n";
+		// outStream << "    Printer " << printers[i].getPrinterID() << " successfully printed " << printers[i].getPagesPrinted() << " pages. \n";
 	}
-	outStream << "	Total Cost: $" << totalCost << "\n";
+	outStream << "\n" << "	Total Cost: \x1b[32m$" << totalCost << "\033[0m\n";
+	outStream << "	Total Pages Printed: " << totalPgsPrinted << " pages \n";
 }
 
 int printerList::getCompletedJobsCount(void){
@@ -251,10 +281,10 @@ void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream,
 	int pageCount = npj->getPageCount();
 
 	queueArray[cutoffIndex].push(npj);
-	outStream << "    New " << pageCount << " page job with ID: " << npj->getJobID();
-	outStream << " got assigned to priority queue level: " << cutoffIndex << "\n";
+	outStream << "    \x1b[36mNew " << pageCount << " page job with ID: " << npj->getJobID();
+	outStream << " got assigned to priority queue level: " << cutoffIndex << "\x1b[0m\n";
 
-	pPagesPrinted[cutoffIndex] = pageCount;
+	pPagesPrinted[cutoffIndex] += pageCount;
 }
 
 void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount, int* pNumJobs) {
@@ -271,18 +301,19 @@ void printScheduler::processJobs(int attempts, printerList& plist, std::ostream&
 			if(!queueArray[priorityLevel].isEmpty()){
 				newJob = queueArray[priorityLevel].front();
 				queueArray[priorityLevel].pop();
-				outStream << "    Job " << newJob->getJobID() << " Taken from priority queue level " << priorityLevel;
+				outStream << "    \x1b[35mJob " << newJob->getJobID() << " Taken from priority queue level " << priorityLevel;
 				plist.assignNewJob(*newJob, outStream);
+				outStream << "\x1b[0m";
 				assignedOneJob = true;
 			} else {
 				priorityLevel++;
 			}
 		}
-		pNumJobs[priorityLevel]++;	//incremements the number of jobs based on priority level
-
 		attempts--;
+
 	}
 
+		pNumJobs[priorityLevel]++;	//incremements the number of jobs based on priority level
 
 }
 
