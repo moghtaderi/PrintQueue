@@ -75,6 +75,7 @@ int printer::getPagesPrinted(void){
 void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted, int jamTime, double jamPrecentage, int maintenanceTime) {
 
 	int remainingPages, wholePages;
+	bool readyToGoOffline;
 
 	if(printerOnline) {
 
@@ -94,7 +95,7 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 				maintenanceThresholdLeft -= wholePages;
 
 				if(maintenanceThresholdLeft <= 0)
-					setPrinterOffline(maintenanceTime);
+					readyToGoOffline = true;
 
 				if (remainingPages != 0) {
 					outStream << "      Printer " << printerID << " has " << remainingPages << " remaining pages \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
@@ -102,6 +103,12 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted,
 					outStream << "      Printer " << printerID << " has finished printing! \n       [cumulative ink cost: $" << std::fixed << std::setprecision(2) << totalInkCost << "]\n";
 					completedJobs++;
 					setPrinterFree();
+
+					if (readyToGoOffline){
+						setPrinterOffline(maintenanceTime);
+						readyToGoOffline = false;
+					}
+
 				}
 
 			}else{
@@ -240,8 +247,8 @@ void printerList::listFreePrinters(std::ostream& outStream) {
 void printerList::completionReport(std::ostream& outStream) {
 	for (int i = 0; i < numberOfPrinters; i++) {
 		outStream << "    Printer " << printers[i].getPrinterID() << " successfully completed " << printers[i].getCompletedJobs() << " print jobs!\n";
-		outStream << "    Printer " << printers[i].getPrinterID() << " Used $" << printers[i].getPrintCost() << " of ink to complete the jobs. \n";
-		outStream << "    Printer " << printers[i].getPrinterID() << " successfully printed " << printers[i].getPagesPrinted() << " pages. \n";
+		outStream << "      These jobs used $" << printers[i].getPrintCost() << " ink and "<< printers[i].getPagesPrinted() << " pieces of paper\n";
+		outStream << "\n";
 	}
 }
 
