@@ -45,12 +45,38 @@ int numNewJobsToQueue(double random, vector<double> distribution){
 int newJobPriorityLevel(double random, int priorityCount){
 	double total = 0.0;
 	int i;
-	for (i = 1; i < priorityCount; i++) {
-		total += 1.0/(double)(2+i);
-		if (random <= total) {
-			return i-1;
+
+	if (priorityCount == 1) {
+		// uniform priority = All jobs are level 0
+		i = 1;
+
+	} else if (priorityCount == 2) {
+		// 50% - 50% distribution
+		if (random <= 0.5){
+			i = 1;
+		} else {
+			i = 2;
+		}
+
+	} else if (priorityCount == 3) {
+		// 30% - 30% - 30% distribution
+		if (random <= 1/3.0){
+			i = 1;
+		}else if (random <= 2/3.0){
+			i = 2;
+		} else {
+			i = 3;
+		}
+	} else {
+		// %33 - 25% - %20 ... distribution
+		for (i = 1; i < priorityCount; i++) {
+			total += 1.0/(double)(2+i);
+			if (random <= total) {
+				return i-1;
+			}
 		}
 	}
+	
 	return i-1;
 }
 
@@ -82,7 +108,7 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 									  int& priorityCount, int*& priorityQueueCutOffs,
 									  double& avgNumPrintJobsPerMinute, double& costPerPage,
 									  char& userPrintCost, double*& printerCostArray,
-									  int& maintenanceThreshold);
+									  int& maintenanceThreshold, int& maintenanceTime);
 
 void getSeedRef(char &userSeed, int &seedValue, bool userInputFromFile);
 
@@ -142,7 +168,8 @@ int main(int argc, char const *argv[]) {
 	int numCreatedJobs = 0;
 	int priorityCount;
 	int* priorityQueueCutOffs = NULL;
-	int maintenanceThreshold = 10;
+	int maintenanceThreshold = 500;
+	int maintenanceTime = 10;
 	vector<double> distribution;
 
 	// choose between file vs. standard input and output paths
@@ -153,7 +180,8 @@ int main(int argc, char const *argv[]) {
 		                     userPrintSpeed, printerSpeedArray, coutBuffer, userSeed,
 									seedValue, userInputFromFile, userOutputToFile, priorityCount,
 									priorityQueueCutOffs, avgNumPrintJobsPerMinute, costPerPage,
-									userPrintCost, printerCostArray, maintenanceThreshold);
+									userPrintCost, printerCostArray, maintenanceThreshold,
+									maintenanceTime);
 
 	// setup distribution vector
 	calculatePoissonDistribution(distribution, avgNumPrintJobsPerMinute);
@@ -242,7 +270,7 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 									  char &userSeed, int &seedValue, bool userInputFromFile,
 									  bool userOutputToFile, int& priorityCount, int*& priorityQueueCutOffs,
 									  double& avgNumPrintJobsPerMinute, double& costPerPage, char& userPrintCost,
-									  double*& printerCostArray, int& maintenanceThreshold){
+									  double*& printerCostArray, int& maintenanceThreshold, int& maintenanceTime){
 
 	char userDefaults;
 	streambuf* currentBuffer = cout.rdbuf();
@@ -258,6 +286,7 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		cout << "Printing speed in pages per minute: " << printerSpeed << endl;
 		cout << "Cost per printed page (USD): " << costPerPage << endl;
 		cout << "Number of printed pages before requiring maintenance: " << maintenanceThreshold << endl;
+		cout << "Time needed to perform the maintenance: " << maintenanceTime << endl;
 		cout << endl << "Would you like to use the above default values [Y/N]: ";
 	}
 	cin >> userDefaults;
@@ -282,6 +311,10 @@ void getSimulationParameters(int &printerCount, int &printerSpeed, int &numPrint
 		if (!userInputFromFile)
 			cout << "Maintenance break printed page count ----- ";
 		cin >> maintenanceThreshold;
+
+		if (!userInputFromFile)
+			cout << "Maintenance break time in minutes -------- ";
+		cin >> maintenanceTime;
 
 		cout << endl;
 	}
