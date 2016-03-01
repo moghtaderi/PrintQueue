@@ -75,6 +75,8 @@ void printer::progressOneMinute(std::ostream& outStream, int& totalPagesPrinted)
 		
 		std::cerr << "partial pages: " << partialPages << " whole pages: " << wholePages << "\n";
 
+		// std::cerr << "total pages printed : " << totalPagesPrinted << "\n";
+
 		remainingPages = currentPrintJob->printAtSpeed(wholePages, totalPagesPrinted, printCost, totalInkCost);
 
 		partialPages -= wholePages;
@@ -193,9 +195,15 @@ void printerList::listFreePrinters(std::ostream& outStream) {
 }
 
 void printerList::completionReport(std::ostream& outStream) {
+	double totalCost = 0;
 	for (int i = 0; i < numberOfPrinters; i++) {
-		outStream << "    Printer " << printers[i].getPrinterID() << " successfully completed " << printers[i].getCompletedJobs() << " print jobs!\n";
+		outStream << "    Printer " << printers[i].getPrinterID() << ":\n" 
+				  << "	successfully completed " << printers[i].getCompletedJobs() << " print jobs.\n"
+				  // << "	successfully printed " << printers[i].getTotalPagesPrinted() << " pages! \n"
+				  << "	has a total print cost of $" << printers[i].getPrintCost() << ".\n";
+		totalCost += printers[i].getPrintCost();
 	}
+	outStream << "	Total Cost: $" << totalCost << "\n";
 }
 
 int printerList::getCompletedJobsCount(void){
@@ -239,15 +247,17 @@ printScheduler::printScheduler(int* priorityQueueCutOffs, int priorityCount){
 	queueArray = new printJobWaitingQueue[priorityCount];
 }
 
-void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex) {
+void printScheduler::scheduleNewPrintJob(printJob* npj, std::ostream& outStream, int cutoffIndex, int* pPagesPrinted) {
 	int pageCount = npj->getPageCount();
 
 	queueArray[cutoffIndex].push(npj);
 	outStream << "    New " << pageCount << " page job with ID: " << npj->getJobID();
 	outStream << " got assigned to priority queue level: " << cutoffIndex << "\n";
+
+	pPagesPrinted[cutoffIndex] = pageCount;
 }
 
-void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount) {
+void printScheduler::processJobs(int attempts, printerList& plist, std::ostream& outStream, int priorityCount, int* pNumJobs) {
 	printJob* newJob;
 	//bool checkQueue = true;
 	bool assignedOneJob;
@@ -268,9 +278,12 @@ void printScheduler::processJobs(int attempts, printerList& plist, std::ostream&
 				priorityLevel++;
 			}
 		}
+		pNumJobs[priorityLevel]++;	//incremements the number of jobs based on priority level
 
 		attempts--;
 	}
+
+
 }
 
 void printScheduler::calculateWaitingTimes(int& high, int& med, int& low) {
